@@ -1,0 +1,11 @@
+{
+  "name": "darshan-portfolio",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Darshan Sonawane's portfolio: a single HTML file with live, unit-tested system simulations.",
+  "scripts": {
+    "test": "node --test test/sim.test.js",
+    "build": "node build.js && cp dist/index.html docs/index.html"
+  },
+  "license": "MIT"
+}
