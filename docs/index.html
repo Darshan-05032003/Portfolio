@@ -3,388 +3,487 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Darshan Sonawane — backend & Android engineer</title>
-<meta name="description" content="Darshan Sonawane builds backends that stay correct under load and Android apps that work when the app is closed. Try the systems live: oversell race, idempotent payments, a double-entry ledger, a geofence.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-LBEDV6SFIlEihjQ3vM8JdFf82xuiVyINjLf9pb8oe44=' 'sha256-qNZFpjtnEdUfwx7LpDLugvzeCjO6oNOAskT80aFZcX4=' 'sha256-IrGDv7RKDy1pQUBlkWnUXIT7oDbtHCJCdJqlTegjVAA='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Darshan Sonawane — backend &amp; Android engineer</title>
+<meta name="description" content="Darshan Sonawane builds backends that stay correct under load and Android apps that work with the app closed. Race-control labs you can break live: oversell race, idempotent payments, a double-entry ledger, a geofence.">
 <meta property="og:title" content="Darshan Sonawane — backend & Android engineer">
-<meta property="og:description" content="Try the systems, don't just read about them. 20 buyers vs 5 units, retried payments, an append-only ledger, a geofence that fires with the app closed.">
-<meta name="theme-color" content="#E7EEE2">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23E7EEE2'/%3E%3Cpath d='M0 12h64M0 24h64M0 36h64M0 48h64' stroke='%23BFD0C8' stroke-width='1'/%3E%3Cpath d='M14 0v64' stroke='%23D0786F' stroke-width='2'/%3E%3Ctext x='38' y='46' font-family='Georgia,serif' font-weight='700' font-size='40' text-anchor='middle' fill='%2315213B'%3ED%3C/text%3E%3C/svg%3E">
+<meta property="og:description" content="Lights out. Twenty buyers for five units, a payment retried twice, a ledger you can't edit, a geofence that fires with the app closed. Try to break them.">
+<meta name="theme-color" content="#0A0B0E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230A0B0E'/%3E%3Cpath d='M14 46 L26 18 H48 L44 27 H32 L30 32 H42 L38 41 H26 L24 46 Z' fill='%23FF2B1F'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,800;1,6..96,500&family=Schibsted+Grotesk:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* Darshan Sonawane portfolio. Ledger paper, blue ink, red ink. */
+/* Darshan Sonawane portfolio — race weekend edition.
+   Motion rule: animate transform and opacity only, ease with expo-out, respect reduced motion. */
 :root {
-  --paper: #E7EEE2;
-  --paper-2: #DAE4D3;
-  --paper-3: #F1F5EE;
-  --rule: #BFD0C8;
-  --margin: #D0786F;
-  --ink: #15213B;
-  --ink-2: #4E5A70;
-  --blue: #2443B0;
-  --blue-soft: #D6DDF3;
-  --red: #B3261E;
-  --red-soft: #F2D9D3;
-  --display: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
-  --sans: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --code: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --line: 32px;
-  --gutter: 132px;
-  --maxw: 1180px;
+  --bg: #0A0B0E; --bg2: #0F1015; --panel: #13141B; --panel2: #191B23; --line: #252833; --line2: #323645;
+  --fg: #F2F3F5; --mute: #8D93A1; --dim: #5B6070;
+  --red: #FF2B1F; --red2: #C81E14; --purple: #B26BFF; --green: #30E07A; --yellow: #FFD23F; --blue: #3DA5FF;
+  --display: "Barlow Condensed", "Arial Narrow", Impact, sans-serif;
+  --sans: "Barlow", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ease: cubic-bezier(.16, 1, .3, 1);
+  --ease-io: cubic-bezier(.65, 0, .35, 1);
+  --maxw: 1240px;
+  --pad: clamp(18px, 4vw, 48px);
 }
-
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-top: 72px; }
 body {
-  margin: 0;
-  overflow-x: hidden;
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 18px;
-  line-height: 1.55;
-  font-feature-settings: "tnum" 0;
-  background-color: var(--paper);
-  /* ledger ruling: faint horizontal lines + red double margin rule */
-  background-image:
-    linear-gradient(90deg, transparent calc(var(--gutter) - 6px), var(--margin) calc(var(--gutter) - 6px), var(--margin) calc(var(--gutter) - 5px), transparent calc(var(--gutter) - 5px), transparent calc(var(--gutter) - 2px), var(--margin) calc(var(--gutter) - 2px), var(--margin) calc(var(--gutter) - 1px), transparent calc(var(--gutter) - 1px)),
-    repeating-linear-gradient(180deg, transparent 0, transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px), var(--rule) var(--line));
-  background-attachment: scroll;
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 17px; line-height: 1.55;
+  overflow-x: hidden; -webkit-font-smoothing: antialiased;
 }
-@media (min-width: 1181px) {
-  body { background-position: calc((100vw - var(--maxw)) / 2) 0, 0 0; }
-}
-
-code { font-family: var(--code); font-size: 0.9em; overflow-wrap: anywhere; }
-a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 3px; }
-a:hover { text-decoration-thickness: 2px; }
-:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 2px; }
-::selection { background: var(--blue); color: var(--paper-3); }
-
-.wrap { max-width: var(--maxw); margin: 0 auto; }
-.row {
-  display: grid;
-  grid-template-columns: var(--gutter) minmax(0, 1fr);
-}
-.margin {
-  padding: 6px 18px 0 16px;
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--ink-2);
-  text-align: right;
-}
-.body { padding: 0 24px 0 32px; min-width: 0; }
-
-.skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: var(--paper); padding: 8px 12px; z-index: 10; }
+body.locked { overflow: hidden; }
+a { color: inherit; }
+code { font-family: var(--mono); font-size: .88em; background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: -999px; top: 8px; z-index: 100; background: var(--red); color: #fff; padding: 8px 14px; }
 .skip:focus { left: 8px; }
+:focus-visible { outline: 2px solid var(--yellow); outline-offset: 3px; }
 
-/* ---------- top bar ---------- */
-.top { padding: 20px 0 0; }
-.top .body { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-.mark { white-space: nowrap; font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--ink); text-decoration: none; letter-spacing: 0.01em; }
-.nav { display: flex; gap: 22px; font-size: 16px; }
-.nav a { color: var(--ink); text-decoration: none; }
-.nav a:hover { color: var(--blue); text-decoration: underline; }
-.top .margin { padding-top: 10px; }
+/* ---------- start lights ---------- */
+.lights {
+  position: fixed; inset: 0; z-index: 90; background: radial-gradient(ellipse at 50% 40%, #16171E 0%, #050507 70%);
+  display: grid; place-content: center; justify-items: center; gap: 28px; cursor: pointer;
+  transition: transform .9s var(--ease-io), opacity .9s var(--ease-io); will-change: transform;
+}
+.lights.go { transform: translate3d(0, -100%, 0); }
+.lights[hidden] { display: none; }
+.gantry { display: flex; gap: clamp(10px, 2.4vw, 22px); padding: 18px clamp(14px, 3vw, 28px); background: #050506; border: 1px solid #22242D; border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+.pod { display: grid; gap: 10px; padding: 10px; background: #0D0E12; border-radius: 10px; border: 1px solid #1C1E26; }
+.pod i { width: clamp(30px, 6vw, 58px); height: clamp(30px, 6vw, 58px); border-radius: 50%; background: #1A0B0A; box-shadow: inset 0 3px 8px rgba(0,0,0,.8); transition: background .06s linear, box-shadow .06s linear; }
+.pod.on i { background: radial-gradient(circle at 35% 30%, #FF8A80 0%, #FF2B1F 38%, #A3150D 100%); box-shadow: 0 0 26px rgba(255,43,31,.85), 0 0 60px rgba(255,43,31,.35); }
+.gantry.small .pod { padding: 7px; gap: 7px; }
+.gantry.small .pod i { width: clamp(18px, 3.4vw, 30px); height: clamp(18px, 3.4vw, 30px); }
+.lights-msg { margin: 0; font-family: var(--mono); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); min-height: 1.4em; text-align: center; }
+.lights-msg.big { font-family: var(--display); font-style: italic; font-weight: 800; font-size: clamp(34px, 7vw, 72px); letter-spacing: .02em; color: var(--fg); }
+.lights-skip { position: absolute; right: 20px; bottom: 20px; background: none; border: 1px solid var(--line2); color: var(--mute); font: 600 13px var(--mono); letter-spacing: .08em; padding: 8px 14px; border-radius: 99px; cursor: pointer; }
+.lights-skip:hover { color: var(--fg); border-color: var(--fg); }
+
+/* ---------- header ---------- */
+.banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 60px; display: flex; align-items: center; gap: 18px;
+  padding: 0 var(--pad); transition: background .4s var(--ease), border-color .4s var(--ease);
+  border-bottom: 1px solid transparent;
+}
+.banner.solid { background: rgba(10,11,14,.78); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); border-color: var(--line); }
+.mark { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 22px; letter-spacing: .04em; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+.mark-slash { width: 18px; height: 18px; background: var(--red); clip-path: polygon(35% 0, 100% 0, 65% 100%, 0 100%); }
+.mark .dot { color: var(--red); }
+.flag { display: flex; align-items: center; gap: 8px; font: 600 11px var(--mono); letter-spacing: .14em; color: var(--mute); margin-right: auto; }
+.flag-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: blink 2.4s ease-in-out infinite; }
+.flag.red .flag-dot { background: var(--red); box-shadow: 0 0 10px var(--red); }
+.flag.yellow .flag-dot { background: var(--yellow); box-shadow: 0 0 10px var(--yellow); }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.nav { display: flex; gap: 22px; align-items: center; font: 600 14px var(--sans); }
+.nav a { text-decoration: none; color: var(--mute); position: relative; padding: 4px 0; transition: color .3s; }
+.nav a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--red); transform: scaleX(0); transform-origin: right; transition: transform .45s var(--ease); }
+.nav a:hover, .nav a.active { color: var(--fg); }
+.nav a:hover::after, .nav a.active::after { transform: scaleX(1); transform-origin: left; }
+.nav .nav-cta { color: var(--fg); border: 1px solid var(--line2); padding: 6px 12px; border-radius: 4px; transform: skewX(-10deg); }
+.nav .nav-cta::after { display: none; }
+
+/* ---------- buttons ---------- */
+.btn {
+  --bgc: transparent; display: inline-flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+  font: 700 15px var(--sans); letter-spacing: .02em; text-decoration: none; color: var(--fg); cursor: pointer;
+  padding: 12px 24px; border: 0; background: var(--bgc); transform: skewX(-12deg); border-radius: 3px;
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.btn > span { display: inline-block; transform: skewX(12deg); position: relative; z-index: 1; }
+.btn::before { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,.14); transform: translateX(-105%); transition: transform .5s var(--ease); }
+.btn:hover::before { transform: translateX(0); }
+.btn:hover { transform: skewX(-12deg) translateY(-2px); }
+.btn:active { transform: skewX(-12deg) translateY(0) scale(.98); }
+.btn-red { --bgc: var(--red); box-shadow: 0 10px 30px -10px rgba(255,43,31,.7); }
+.btn-ghost { box-shadow: inset 0 0 0 1.5px var(--line2); }
+.btn-ghost:hover { box-shadow: inset 0 0 0 1.5px var(--fg); }
+.btn.sm { padding: 8px 14px; font-size: 13px; }
+.btn.danger { box-shadow: inset 0 0 0 1.5px rgba(255,43,31,.55); color: #FF8A80; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
 
 /* ---------- hero ---------- */
-.hero { padding: 40px 0 24px; }
-.name {
-  font-family: var(--display);
-  font-optical-sizing: auto;
-  font-weight: 800;
-  font-size: clamp(54px, 10.5vw, 148px);
-  line-height: 0.88;
-  letter-spacing: -0.025em;
-  margin: 0 0 28px;
-  /* the surname sits a ruled line lower, like an entry carried over */
-}
-.name span { display: block; }
-.name .carry { padding-left: 0.62em; font-style: italic; font-weight: 500; }
+.hero { position: relative; min-height: 100svh; padding: 110px var(--pad) 28px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; isolation: isolate; }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -2; background:
+  radial-gradient(60% 50% at 75% 35%, rgba(255,43,31,.12), transparent 70%),
+  radial-gradient(50% 50% at 10% 90%, rgba(178,107,255,.08), transparent 70%); }
+.streaks { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+.hero-in { width: 100%; max-width: var(--maxw); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .9fr); gap: clamp(24px, 4vw, 64px); align-items: center; }
+.eyebrow { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; font: 600 13px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+.eyebrow .num { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 26px; letter-spacing: 0; color: var(--bg); background: var(--fg); padding: 0 10px; transform: skewX(-12deg); line-height: 1.25; }
+.title { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase; line-height: .86; letter-spacing: -.005em; font-size: clamp(56px, 10vw, 150px); }
+.title .line { display: block; overflow: hidden; padding: 0 .06em .04em 0; margin-right: -.06em; }
+.title .word { display: inline-block; transform: translate3d(-104%, 0, 0) skewX(-14deg); transition: transform 1.1s var(--ease); will-change: transform; }
+.title .line:nth-child(2) .word { transition-delay: .12s; }
+.title.in .word { transform: translate3d(0, 0, 0) skewX(0); }
+.title .outline { color: transparent; -webkit-text-stroke: 2px var(--fg); background: linear-gradient(90deg, var(--red) 0 50%, transparent 50% 100%) 100% 0 / 200% 100% no-repeat; -webkit-background-clip: text; background-clip: text; transition: transform 1.1s var(--ease), background-position .9s var(--ease); }
+.title .outline:hover { background-position: 0 0; }
+.lede { font-size: clamp(18px, 1.7vw, 22px); line-height: 1.45; max-width: 34ch; color: #D6D9E0; margin: 26px 0 30px; }
+.ctas { display: flex; flex-wrap: wrap; gap: 14px; }
 
-.hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start; }
-.lede { font-size: 24px; line-height: 1.38; margin: 0 0 18px; max-width: 26ch; }
-.sub { color: var(--ink-2); margin: 0 0 24px; max-width: 40ch; }
-.ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+/* reveal for hero copy */
+.hero-text .eyebrow, .hero-text .lede, .hero-text .ctas { opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+.hero-text.in .eyebrow { opacity: 1; transform: none; }
+.hero-text.in .lede { opacity: 1; transform: none; transition-delay: .35s; }
+.hero-text.in .ctas { opacity: 1; transform: none; transition-delay: .45s; }
 
-.btn {
-  font: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 18px;
-  border: 1.5px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper-3);
-  border-radius: 999px;
-  cursor: pointer;
-  text-decoration: none;
-  line-height: 1.2;
-}
-.btn:hover { background: var(--blue); border-color: var(--blue); }
-.btn.ghost { background: transparent; color: var(--ink); }
-.btn.ghost:hover { background: var(--ink); color: var(--paper-3); }
-.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
-.btn svg { width: 16px; height: 16px; flex: none; }
+/* cockpit */
+.cockpit { position: relative; background: linear-gradient(180deg, var(--panel2), var(--panel)); border: 1px solid var(--line); border-radius: 18px; padding: 22px 22px 18px;
+  box-shadow: 0 40px 80px -30px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04);
+  opacity: 0; transform: translate3d(40px, 0, 0); transition: opacity 1s var(--ease) .3s, transform 1s var(--ease) .3s; }
+.cockpit.in { opacity: 1; transform: none; }
+.cockpit::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 6px), repeating-linear-gradient(-45deg, rgba(255,255,255,.018) 0 2px, transparent 2px 6px); }
+.shift { display: grid; grid-template-columns: repeat(15, 1fr); gap: 5px; margin-bottom: 14px; }
+.shift i { aspect-ratio: 1; border-radius: 50%; background: #1C1E26; box-shadow: inset 0 1px 3px rgba(0,0,0,.6); transition: background .08s linear, box-shadow .08s linear; }
+.shift i.on.g { background: var(--green); box-shadow: 0 0 10px var(--green); }
+.shift i.on.r { background: var(--red); box-shadow: 0 0 10px var(--red); }
+.shift i.on.p { background: var(--purple); box-shadow: 0 0 10px var(--purple); }
+.shift.limiter i.on { animation: limiter .12s steps(2) infinite; }
+@keyframes limiter { 50% { opacity: .2; } }
+.gauge { display: block; width: 100%; height: auto; }
+.gauge-track { fill: none; stroke: #20222B; stroke-width: 14; stroke-linecap: round; }
+.gauge-fill { fill: none; stroke: var(--red); stroke-width: 14; stroke-linecap: round; stroke-dasharray: 0 100; opacity: 0; transition: opacity .2s; filter: drop-shadow(0 0 6px rgba(255,43,31,.55)); }
+.ticks line { stroke: #3A3E4E; stroke-width: 2; }
+.ticks text { fill: var(--dim); font: 600 9px var(--mono); }
+.readout { display: flex; justify-content: space-between; align-items: end; margin-top: 2px; padding: 0 8px; position: relative; }
+.readout b { display: block; font-family: var(--display); font-style: italic; font-weight: 800; font-size: 64px; line-height: .9; font-variant-numeric: tabular-nums; min-width: 3ch; }
+.readout span { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.readout .gear { text-align: center; border: 1.5px solid var(--line2); border-radius: 10px; padding: 6px 14px 4px; }
+.readout .gear b { font-size: 42px; color: var(--yellow); min-width: 1ch; }
+.cockpit-hint { margin: 14px 0 0; text-align: center; font: 600 11px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
 
-/* ---------- lab panels (the loud element) ---------- */
-.lab {
-  background: var(--paper-3);
-  border: 1.5px solid var(--ink);
-  box-shadow: 6px 6px 0 var(--ink);
-  padding: 22px 22px 20px;
-  position: relative;
-}
-.lab h2, .lab h3 { font-family: var(--display); font-weight: 700; margin: 0 0 6px; line-height: 1.12; }
-.lab h2 { font-size: 30px; }
-.lab h3 { font-size: 26px; }
-.lab .q { color: var(--ink-2); margin: 0 0 16px; font-size: 16px; }
+/* timing strip */
+.timing { position: relative; max-width: var(--maxw); width: 100%; margin: clamp(36px, 6vh, 64px) auto 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; background: rgba(19,20,27,.7); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); overflow: hidden; }
+.cell { position: relative; padding: 14px 18px 18px; border-left: 1px solid var(--line); }
+.cell:first-child { border-left: 0; }
+.cell .lbl { display: block; font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+.cell b { display: block; font-family: var(--display); font-style: italic; font-weight: 800; font-size: clamp(30px, 3.4vw, 44px); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.cell .secbar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; transform: scaleX(0); transform-origin: left; transition: transform 1.2s var(--ease) calc(var(--d, 0s) + .3s); }
+.cell.in .secbar { transform: scaleX(1); }
+.secbar.purple { background: var(--purple); } .secbar.green { background: var(--green); } .secbar.yellow { background: var(--yellow); }
 
-.choice { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; border: 0; padding: 0; }
-.choice legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.choice label {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 7px 14px; border: 1.5px solid var(--ink-2); border-radius: 999px;
-  font-size: 15px; cursor: pointer; background: transparent; user-select: none;
-}
-.choice input { position: absolute; opacity: 0; pointer-events: none; }
-.choice input:checked + span { font-weight: 700; }
-.choice label:has(input:checked) { border-color: var(--ink); background: var(--ink); color: var(--paper-3); }
-.choice label:has(input:focus-visible) { outline: 3px solid var(--blue); outline-offset: 2px; }
-
-/* race */
-.race-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; }
-.buyers { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; list-style: none; margin: 0; padding: 0; }
-.buyer {
-  aspect-ratio: 1; border-radius: 50%;
-  display: grid; place-items: center;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
-  border: 1.5px solid var(--ink-2); color: var(--ink-2);
-  transition: background-color .25s, color .25s, border-color .25s, transform .25s;
-  position: relative;
-}
-.buyer.reading { border-color: var(--blue); color: var(--blue); border-style: dashed; }
-.buyer.ordered { background: var(--blue); border-color: var(--blue); color: #fff; }
-.buyer.phantom { background: var(--red); border-color: var(--red); color: #fff; transform: scale(1.08); }
-.buyer.rejected { border-color: var(--rule); color: var(--rule); text-decoration: line-through; }
-@media (prefers-reduced-motion: reduce) { .buyer { transition: none; } .buyer.phantom { transform: none; } }
-
-.tally { display: grid; grid-template-columns: auto auto; gap: 0 18px; text-align: right; }
-.tally dt { font-size: 14px; color: var(--ink-2); grid-row: 2; }
-.tally dd { margin: 0; font-family: var(--display); font-weight: 700; font-size: 52px; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
-.tally dd.bad { color: var(--red); }
-
-.sqllog {
-  margin: 14px 0 0; padding: 10px 12px; min-height: 132px;
-  background: var(--ink); color: #DCE3F5;
-  font-family: var(--code); font-size: 12.5px; line-height: 1.6;
-  overflow: hidden; border-radius: 2px;
-  white-space: pre;
-}
-.sqllog .ok { color: #9FB6FF; }
-.sqllog .no { color: #8C96AB; }
-.sqllog .bad { color: #FF9B91; }
-.verdict { margin: 14px 0 0; min-height: 52px; font-size: 17px; line-height: 1.45; }
-.verdict strong { font-weight: 700; }
-.verdict.bad strong { color: var(--red); }
-.verdict.good strong { color: var(--blue); }
-.lab-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
-.lab-actions small { color: var(--ink-2); font-size: 14px; }
+.kerb { height: 10px; background: repeating-linear-gradient(-45deg, var(--red) 0 14px, var(--fg) 14px 28px); opacity: .9; animation: kerb 1.6s linear infinite; background-size: 39.6px 10px; }
+@keyframes kerb { to { background-position: 39.6px 0; } }
 
 /* ---------- sections ---------- */
-section { padding: 64px 0 24px; }
-.sec-title {
-  font-family: var(--display); font-weight: 700;
-  font-size: clamp(36px, 5vw, 58px); line-height: 1.04; letter-spacing: -0.015em;
-  margin: 0 0 14px; max-width: 18ch;
-}
-.sec-intro { max-width: 62ch; color: var(--ink-2); margin: 0 0 32px; }
-.labs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; }
+.sec { max-width: var(--maxw); margin: 0 auto; padding: clamp(64px, 10vh, 120px) var(--pad); }
+.sec-head { margin-bottom: 36px; }
+.sec-num { margin: 0 0 10px; font: 700 12px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--red); }
+.sec h2 { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase; font-size: clamp(40px, 6vw, 80px); line-height: .92; letter-spacing: -.005em; max-width: 16ch; }
+.sec-intro { color: var(--mute); max-width: 62ch; margin: 18px 0 0; }
 
-/* pay lab */
-.switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; margin-bottom: 14px; }
+[data-reveal] { opacity: 0; transform: translate3d(0, 28px, 0); transition: opacity 1s var(--ease) var(--d, 0s), transform 1s var(--ease) var(--d, 0s); }
+[data-reveal].in { opacity: 1; transform: none; }
+
+/* ---------- timing tower ---------- */
+.tower { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); }
+.row { border-top: 1px solid var(--line); opacity: 0; transform: translate3d(60px, 0, 0); transition: opacity .7s var(--ease), transform .7s var(--ease), background .3s; transition-delay: calc(var(--i) * 55ms); }
+.row:first-child { border-top: 0; }
+.tower.in .row { opacity: 1; transform: none; }
+.row-btn { width: 100%; display: grid; grid-template-columns: 54px 6px minmax(0, 1fr) 70px 150px 92px 26px; align-items: center; gap: 14px; padding: 12px 18px 12px 12px; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; }
+.row-btn::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,43,31,.10), transparent 60%); opacity: 0; transition: opacity .35s var(--ease); }
+.row-btn:hover::before, .row.open .row-btn::before { opacity: 1; }
+.pos { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 22px; background: var(--fg); color: var(--bg); text-align: center; border-radius: 4px; padding: 2px 0; }
+.row:nth-child(1) .pos { background: var(--purple); color: #fff; }
+.stripe { height: 30px; border-radius: 2px; }
+.rname { display: grid; min-width: 0; }
+.rname b { font-family: var(--display); font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; }
+.rname span { font-size: 13.5px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tyre { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; font: 800 13px var(--display); background: #0B0C10; border: 4px solid currentColor; color: var(--fg); }
+.tyre.soft { color: var(--red); } .tyre.med { color: var(--yellow); } .tyre.hard { color: #E9EAEE; } .tyre.inter { color: var(--green); } .tyre.wet { color: var(--blue); }
+.tyre-cell { display: flex; align-items: center; gap: 8px; font: 600 11px var(--mono); color: var(--mute); }
+.stat { font: 700 14px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.gap { font: 700 14px var(--mono); text-align: right; color: var(--green); font-variant-numeric: tabular-nums; }
+.gap.best { color: var(--purple); }
+.chev { width: 12px; height: 12px; border-right: 2px solid var(--mute); border-bottom: 2px solid var(--mute); transform: rotate(45deg); transition: transform .45s var(--ease); justify-self: center; margin-top: -6px; }
+.row.open .chev { transform: rotate(225deg); margin-top: 6px; }
+.detail { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .6s var(--ease); }
+.row.open .detail { grid-template-rows: 1fr; }
+.detail > div { overflow: hidden; }
+.detail-in { padding: 4px 22px 22px 98px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; opacity: 0; transform: translate3d(0, -8px, 0); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+.row.open .detail-in { opacity: 1; transform: none; transition-delay: .12s; }
+.detail ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.detail li { position: relative; padding-left: 20px; color: #CDD1D9; font-size: 15.5px; }
+.detail li::before { content: ""; position: absolute; left: 0; top: .62em; width: 10px; height: 2px; background: var(--red); }
+.detail .repo { align-self: start; white-space: nowrap; }
+
+/* ---------- labs ---------- */
+.labs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+.lab { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 0 22px 20px; overflow: hidden; }
+.lab-wide { grid-column: 1 / -1; }
+.lab::after { content: ""; position: absolute; left: 0; top: 0; height: 3px; width: 100%; background: linear-gradient(90deg, var(--red), transparent); opacity: .6; }
+.lab-bar { display: flex; justify-content: space-between; align-items: center; margin: 0 -22px 16px; padding: 12px 22px; border-bottom: 1px solid var(--line); background: var(--panel2); }
+.chip { font: 700 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; transform: skewX(-10deg); display: inline-block; color: #0A0B0E; }
+.chip.red { background: var(--red); color: #fff; } .chip.yellow { background: var(--yellow); } .chip.purple { background: var(--purple); color: #fff; } .chip.green { background: var(--green); }
+.lab-status { font: 600 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mute); display: flex; align-items: center; gap: 8px; }
+.lab-status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+.lab-status.live::before { background: var(--yellow); animation: blink .6s infinite; }
+.lab-status.bad::before { background: var(--red); }
+.lab h3 { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase; font-size: clamp(26px, 2.6vw, 34px); line-height: 1; }
+.lab .q { color: var(--mute); margin: 8px 0 16px; font-size: 15.5px; }
+.lab-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; margin-top: 16px; }
+.lab-actions small { color: var(--dim); font-size: 13px; }
+.lab-actions small a { color: var(--mute); }
+.verdict { margin: 12px 0 0; font-size: 15px; color: #CDD1D9; min-height: 0; }
+.verdict:empty { display: none; }
+.verdict strong { color: var(--fg); }
+.verdict.bad strong { color: #FF6B60; }
+.verdict.good strong { color: var(--green); }
+
+.seg { display: inline-flex; border: 0; padding: 3px; margin: 0 0 14px; background: var(--bg2); border-radius: 8px; border: 1px solid var(--line); }
+.seg label { position: relative; cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 7px 14px; font: 600 13.5px var(--sans); color: var(--mute); border-radius: 6px; transition: background .3s var(--ease), color .3s; }
+.seg input:checked + span { background: var(--fg); color: var(--bg); }
+.seg input:focus-visible + span { outline: 2px solid var(--yellow); }
+
+/* race stage */
+.race-wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }
+.stage { position: relative; width: 100%; margin-top: 22px; }
+.zone-lbl { position: absolute; top: -20px; font: 700 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+.zone-lbl.red { color: #FF6B60; opacity: 0; transition: opacity .4s; }
+.stage.over .zone-lbl.red { opacity: 1; }
+.slot { position: absolute; border: 1.5px dashed var(--line2); border-radius: 6px; }
+.car {
+  position: absolute; left: 0; top: 0; display: grid; place-items: center; border-radius: 6px; font: 700 11.5px var(--mono);
+  background: #20232D; color: var(--fg); border: 1.5px solid #343848; will-change: transform;
+  transition: transform .75s var(--ease), background .25s, color .25s, border-color .25s, opacity .4s;
+}
+.car::after { content: ""; position: absolute; inset: -4px; border-radius: 9px; border: 2px solid var(--yellow); opacity: 0; transform: scale(.8); transition: opacity .2s, transform .3s var(--ease); }
+.car.req::after { opacity: 1; transform: scale(1); }
+.car.won { background: var(--green); color: #07130C; border-color: var(--green); }
+.car.phantom { background: var(--red); color: #fff; border-color: var(--red); }
+.car.rej { opacity: .32; background: transparent; }
+.car.rej::before { content: "409"; position: absolute; top: -9px; right: -6px; font: 700 8.5px var(--mono); background: var(--panel); color: #FF6B60; padding: 0 3px; border-radius: 3px; }
+.tally { display: grid; gap: 10px; margin: 22px 0 0; min-width: 96px; }
+.tally div { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.tally dt { font: 700 10.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.tally dd { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; font-size: 46px; line-height: 1; font-variant-numeric: tabular-nums; transition: color .3s; }
+.tally dd.bad { color: #FF6B60; }
+.tally dd.good { color: var(--green); }
+.tally dd.pop { animation: pop .35s var(--ease); }
+@keyframes pop { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+.ticker { list-style: none; margin: 16px 0 0; padding: 10px 12px; background: #08090C; border: 1px solid var(--line); border-radius: 10px; min-height: 136px; max-height: 136px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; font: 12px/1.5 var(--mono); }
+.ticker li { color: var(--mute); animation: tick .35s var(--ease); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticker li b { color: var(--yellow); font-weight: 700; }
+.ticker li.ok b { color: var(--green); }
+.ticker li.bad, .ticker li.bad b { color: #FF6B60; }
+@keyframes tick { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: none; } }
+
+/* payment lane */
+.switch { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; font-weight: 600; font-size: 15px; }
 .switch input { position: absolute; opacity: 0; }
-.switch .track { width: 42px; height: 24px; border-radius: 999px; background: var(--rule); position: relative; transition: background .2s; flex: none; }
-.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
-.switch input:checked + .track { background: var(--blue); }
-.switch input:checked + .track::after { transform: translateX(18px); }
-.switch input:focus-visible + .track { outline: 3px solid var(--blue); outline-offset: 2px; }
-.wire { list-style: none; margin: 14px 0 0; padding: 0; font-size: 15px; }
-.wire li { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--rule); }
-.wire li b { font-weight: 600; }
-.wire .lost { color: var(--red); }
-.wire .replay { color: var(--blue); }
-.stmt:not(:empty) { margin-top: 14px; border-top: 2px solid var(--ink); }
-.stmt-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 15px; font-variant-numeric: tabular-nums; }
-.stmt-row.total { font-weight: 700; border-bottom: 3px double var(--ink); }
-.stmt-row.total.bad { color: var(--red); }
+.switch .track { width: 46px; height: 26px; border-radius: 99px; background: #2A2D39; position: relative; transition: background .3s var(--ease); flex: none; }
+.switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--fg); transition: transform .4s var(--ease); }
+.switch input:checked + .track { background: var(--green); }
+.switch input:checked + .track::after { transform: translateX(20px); }
+.switch input:focus-visible + .track { outline: 2px solid var(--yellow); outline-offset: 2px; }
+.lane { display: grid; grid-template-columns: 70px minmax(0, 1fr) 96px; gap: 10px; align-items: center; margin: 18px 0 8px; }
+.node { background: var(--bg2); border: 1px solid var(--line2); border-radius: 10px; padding: 8px; text-align: center; }
+.node b { display: block; font: 800 15px var(--display); font-style: italic; letter-spacing: .06em; }
+.node span { font: 600 11px var(--mono); color: var(--mute); }
+.road { position: relative; height: 64px; border-radius: 8px; background: repeating-linear-gradient(90deg, #2A2D39 0 12px, transparent 12px 24px) center / 100% 2px no-repeat, #0E0F14; overflow: hidden; }
+.pkt { position: absolute; left: 6px; top: 8px; padding: 3px 9px; border-radius: 99px; font: 700 10.5px var(--mono); background: var(--fg); color: var(--bg); white-space: nowrap; will-change: transform; }
+.pkt.back { top: 36px; left: auto; right: 6px; background: var(--green); color: #07130C; }
+.pkt.lost { background: var(--red); color: #fff; }
+.wire { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+.wire li { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 6px 10px; background: var(--bg2); border-radius: 6px; animation: tick .35s var(--ease); }
+.wire li b { font: 700 12px var(--mono); }
+.wire .lost { color: #FF6B60; }
+.wire .replay { color: var(--green); }
+.stmt:not(:empty) { margin-top: 12px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stmt-row { display: flex; justify-content: space-between; padding: 8px 12px; font: 13px var(--mono); border-top: 1px solid var(--line); animation: tick .35s var(--ease); }
+.stmt-row:first-child { border-top: 0; }
+.stmt-row.total { font-weight: 700; background: var(--bg2); }
+.stmt-row.total.bad { color: #FF6B60; }
+.stmt-row.total.good { color: var(--green); }
 
-/* ledger lab */
-.accts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-.acct { border-top: 2px solid var(--ink); padding-top: 6px; }
-.acct b { display: block; font-family: var(--display); font-size: 28px; font-weight: 700; font-variant-numeric: lining-nums tabular-nums; line-height: 1.1; }
-.acct span { font-size: 14px; color: var(--ink-2); }
-.acct .held { color: var(--red); }
-.ops { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.ops .btn { font-size: 14px; padding: 8px 14px; }
-.journal { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-.journal th { text-align: left; font-weight: 600; color: var(--ink-2); padding: 4px 6px; border-bottom: 2px solid var(--ink); }
-.journal td { padding: 6px; border-bottom: 1px solid var(--rule); vertical-align: top; }
-.journal .num { text-align: right; white-space: nowrap; }
-.journal th.num { text-align: right; }
-.journal tr.rev td { color: var(--ink-2); font-style: italic; }
-.journal tfoot td { font-weight: 700; border-top: 2px solid var(--ink); border-bottom: 3px double var(--ink); }
-.journal .act { white-space: nowrap; text-align: right; }
-.linkbtn { font: inherit; font-size: 13px; background: none; border: 0; color: var(--blue); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; padding: 2px 4px; }
-.linkbtn.danger { color: var(--red); }
-.journal-scroll { max-height: 290px; overflow-y: auto; overflow-x: auto; border-bottom: 1px solid var(--rule); }
-.stamp {
-  display: inline-block; transform: rotate(-4deg);
-  border: 2.5px solid var(--blue); color: var(--blue);
-  font-family: var(--display); font-weight: 800; font-size: 18px;
-  padding: 2px 12px; border-radius: 4px; letter-spacing: 0.02em;
-}
+/* ledger */
+.accts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.acct { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.acct > span { display: block; font: 600 12px var(--mono); color: var(--mute); }
+.acct b { display: block; font-family: var(--display); font-style: italic; font-weight: 800; font-size: 34px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.acct .held { color: var(--yellow); }
+.pending > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: rgba(255,210,63,.08); border: 1px solid rgba(255,210,63,.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 14.5px; }
+.ops { display: flex; flex-wrap: wrap; gap: 10px; margin: 4px 0 14px; }
+.journal-scroll { max-height: 300px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
+.journal { width: 100%; border-collapse: collapse; font: 13px var(--mono); }
+.journal th { position: sticky; top: 0; background: var(--panel2); text-align: left; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); padding: 8px 10px; border-bottom: 1px solid var(--line2); }
+.journal td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.journal tbody tr { animation: tick .4s var(--ease); }
+.journal tr.rev td { color: var(--purple); }
+.journal .num { text-align: right; font-variant-numeric: tabular-nums; }
+.journal .act { text-align: right; white-space: nowrap; }
+.journal tfoot td { font-weight: 700; background: var(--bg2); border-bottom: 0; position: sticky; bottom: 0; }
+.journal .jt { color: var(--dim); }
+.linkbtn { background: none; border: 0; padding: 2px 6px; color: var(--mute); font: 600 12px var(--mono); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkbtn:hover { color: var(--fg); }
+.linkbtn.danger { color: #FF8A80; }
+.stamp { display: inline-block; font: 800 12px var(--display); letter-spacing: .14em; text-transform: uppercase; padding: 2px 10px; border: 2px solid var(--green); color: var(--green); border-radius: 3px; transform: rotate(-4deg); }
 .stamp.bad { border-color: var(--red); color: var(--red); }
-.notice { margin: 12px 0 0; padding: 10px 12px; font-size: 14px; border-left: 3px solid var(--blue); background: var(--blue-soft); }
-.notice.bad { border-left-color: var(--red); background: var(--red-soft); }
-.notice code { font-family: var(--code); font-size: 13px; }
-.pending { margin: 0 0 12px; font-size: 14px; }
-.pending div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; background: var(--red-soft); border-left: 3px solid var(--red); margin-bottom: 6px; }
+.notice { margin: 12px 0 0; padding: 10px 14px; border-left: 3px solid var(--green); background: rgba(48,224,122,.07); border-radius: 0 8px 8px 0; font-size: 14.5px; animation: tick .35s var(--ease); }
+.notice.bad { border-color: var(--red); background: rgba(255,43,31,.08); }
+.notice.bad code { color: #FF8A80; }
 
-/* ---------- work ---------- */
-.entry { padding: 36px 0 40px; border-top: 2px solid var(--ink); }
-.entry:first-of-type { border-top: 0; }
-.entry .margin { padding-top: 46px; }
-.entry-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 40px; }
-.entry h3 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 3.6vw, 44px); margin: 0 0 10px; line-height: 1.05; letter-spacing: -0.01em; }
-.entry h3 a { color: var(--ink); text-decoration: none; }
-.entry h3 a:hover { color: var(--blue); text-decoration: underline; text-decoration-thickness: 2px; }
-.entry h3 svg { width: 0.5em; height: 0.5em; vertical-align: 0.18em; margin-left: 0.18em; }
-.entry .what { font-size: 19px; margin: 0 0 16px; max-width: 58ch; }
-.decisions { margin: 0; padding: 0; list-style: none; }
-.decisions li { padding: 10px 0 10px 22px; border-top: 1px solid var(--rule); position: relative; max-width: 62ch; }
-.decisions li::before { content: ""; position: absolute; left: 2px; top: 20px; width: 9px; height: 1.5px; background: var(--ink); }
-.decisions b { font-weight: 700; }
-.figures { margin: 0; border-top: 2px solid var(--ink); font-variant-numeric: tabular-nums; }
-.figures div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
-.figures dt { color: var(--ink-2); font-size: 15px; }
-.figures dd { margin: 0; font-family: var(--display); font-weight: 700; font-size: 26px; font-variant-numeric: lining-nums tabular-nums; }
-.stack { font-size: 15px; color: var(--ink-2); margin: 16px 0 0; }
-.stack b { color: var(--ink); font-weight: 600; }
+/* geofence */
+.geo { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 22px; align-items: start; }
+.map { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); touch-action: none; }
+.map-lbl { font: 700 11px var(--mono); letter-spacing: .14em; fill: var(--green); }
+.map-name { font: 600 13px var(--sans); fill: var(--fg); }
+.map-name.b { font-weight: 700; }
+.dot { cursor: grab; outline: none; }
+.dot:active { cursor: grabbing; }
+.dot:focus-visible #geo-halo { stroke: var(--yellow); stroke-width: 2; }
+#geo-halo, #geo-car { transition: fill .3s; }
+.pipeline { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 5px; font-size: 13.5px; }
+.pipeline li { display: flex; gap: 10px; align-items: center; padding: 7px 10px; background: var(--bg2); border-radius: 6px; color: var(--mute); position: relative; overflow: hidden; }
+.pipeline li span { font: 700 11px var(--mono); color: var(--dim); min-width: 22px; }
+.pipeline li::before { content: ""; position: absolute; inset: 0; background: rgba(178,107,255,.16); transform: translateX(-101%); transition: transform .45s var(--ease); }
+.pipeline li.on { color: var(--fg); }
+.pipeline li.on::before { transform: none; }
+.pipeline li.on span { color: var(--purple); }
+.pipeline li.muted { color: var(--yellow); }
+.geo-help { color: var(--mute); font-size: 14px; margin: 10px 0 0; }
+.phone { background: #050507; border: 1px solid var(--line2); border-radius: 30px; padding: 12px; box-shadow: 0 30px 60px -20px rgba(0,0,0,.7); }
+.phone::before { content: ""; display: block; width: 64px; height: 6px; border-radius: 99px; background: #1E2029; margin: 0 auto 10px; }
+.screen { background: linear-gradient(180deg, #171923, #0F1016); border-radius: 20px; min-height: 270px; padding: 12px 10px; display: grid; align-content: start; gap: 8px; }
+.clock { font-family: var(--display); font-weight: 700; font-size: 44px; text-align: center; color: #C8CCD6; font-variant-numeric: tabular-nums; }
+.notif { background: rgba(242,243,245,.92); color: #0A0B0E; border-radius: 12px; padding: 8px 10px; font-size: 13px; animation: slidein .55s var(--ease); }
+.notif b { display: block; font: 700 10.5px var(--mono); color: #4B5060; }
+@keyframes slidein { from { opacity: 0; transform: translate3d(0, -14px, 0) scale(.96); } to { opacity: 1; transform: none; } }
 
-/* geofence lab */
-.geo { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 20px; align-items: start; }
-.geo svg.map { width: 100%; height: auto; display: block; background: var(--paper-2); border: 1.5px solid var(--ink); touch-action: none; }
-.geo .dot { cursor: grab; }
-.geo .dot:active { cursor: grabbing; }
-.pipeline { list-style: none; margin: 12px 0 0; padding: 0; font-size: 14px; display: grid; gap: 4px; counter-reset: step; }
-.pipeline li { padding: 4px 8px; border-left: 3px solid var(--rule); color: var(--ink-2); transition: border-color .2s, color .2s, background-color .2s; }
-.pipeline li.on { border-left-color: var(--blue); color: var(--ink); background: var(--blue-soft); }
-.pipeline li.muted { border-left-color: var(--red); color: var(--red); background: var(--red-soft); }
-.phone {
-  border: 2px solid var(--ink); border-radius: 28px; padding: 30px 10px 22px; background: var(--ink);
-  min-height: 300px; position: relative;
-}
-.phone::before { content: ""; position: absolute; top: 11px; left: 50%; width: 56px; height: 7px; margin-left: -28px; border-radius: 99px; background: #2C3A5A; }
-.phone .screen { background: #26334F; border-radius: 16px; min-height: 248px; padding: 10px 8px; display: flex; flex-direction: column; gap: 8px; }
-.phone .clock { color: #C6D0E6; font-size: 34px; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; margin: 6px 0 8px; }
-.notif { background: rgba(231, 238, 226, 0.94); color: var(--ink); border-radius: 12px; padding: 8px 10px; font-size: 13px; line-height: 1.35; animation: drop .35s ease-out; }
-.notif b { display: block; font-size: 12px; color: var(--ink-2); font-weight: 600; }
-@keyframes drop { from { transform: translateY(-10px); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .notif { animation: none; } }
-.geo-help { font-size: 14px; color: var(--ink-2); margin: 8px 0 0; }
+/* ---------- pace ---------- */
+.pace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; }
+.chart h3 { margin: 0 0 14px; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase; font-size: 26px; }
+.bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.bars li { display: grid; grid-template-columns: 150px minmax(0, 1fr) 72px; gap: 12px; align-items: center; font-size: 14px; }
+.bars .bn { font: 600 13px var(--mono); color: #CDD1D9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bars .bt { display: block; height: 14px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+.bars .bf { display: block; width: 100%; height: 100%; background: var(--green); transform: scaleX(0); transform-origin: left; transition: transform 1.4s var(--ease); transition-delay: calc(var(--i) * 90ms + .2s); border-radius: 3px; }
+.bars .bf.best { background: var(--purple); }
+.chart.in .bf { transform: scaleX(var(--w)); }
+.bars .bv { font: 700 13px var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.bars .bv small { display: block; font-weight: 600; font-size: 11px; color: var(--mute); }
 
-/* ---------- about ---------- */
-.about-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 48px; }
-.about-grid p { margin: 0 0 16px; max-width: 60ch; }
+/* ---------- pit wall ---------- */
+.strategies { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+.strat { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; transition: transform .5s var(--ease), border-color .4s; }
+.strat:hover { transform: translate3d(0, -4px, 0); border-color: var(--line2); }
+.tyre-row { display: flex; align-items: center; gap: 10px; margin: 0; font: 700 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.strat h3 { margin: 10px 0 8px; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase; font-size: 40px; line-height: 1; }
+.strat ul { margin: 12px 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.strat li { position: relative; padding-left: 20px; color: #CDD1D9; }
+.strat li::before { content: ""; position: absolute; left: 0; top: .66em; width: 10px; height: 2px; background: var(--red); }
+.fine { color: var(--mute); font-size: 14.5px; }
+.fine a { color: #CDD1D9; }
+.radio { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; background: linear-gradient(90deg, rgba(255,43,31,.14), rgba(255,43,31,0) 70%), var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; }
+.radio-lbl { margin: 0; font: 700 12px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--red); width: 100%; }
+.radio-addr { font-family: var(--display); font-style: italic; font-weight: 800; font-size: clamp(26px, 4.2vw, 50px); text-decoration: none; line-height: 1; word-break: break-all; background: linear-gradient(var(--red), var(--red)) 0 100% / 0 3px no-repeat; transition: background-size .6s var(--ease); padding-bottom: 4px; }
+.radio-addr:hover { background-size: 100% 3px; }
+.radio-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.copied { font: 600 13px var(--mono); color: var(--green); }
+.driver { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; }
+.driver p { color: #CDD1D9; margin: 0 0 12px; }
 .kit { margin: 0; }
-.kit div { padding: 10px 0; border-top: 1px solid var(--rule); }
-.kit dt { font-weight: 700; font-size: 15px; }
-.kit dd { margin: 2px 0 0; color: var(--ink-2); font-size: 16px; }
-
-/* ---------- more entries ---------- */
-.more { width: 100%; border-collapse: collapse; border-top: 2px solid var(--ink); font-size: 16px; }
-.more th { text-align: left; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-2); padding: 10px 0 8px; border-bottom: 1.5px solid var(--ink); font-weight: 600; }
-.more td { vertical-align: top; padding: 14px 18px 16px 0; border-bottom: 1px solid var(--rule); }
-.more td:first-child { width: 22%; }
-.more td a { font-family: var(--display); font-weight: 700; font-size: 21px; color: var(--ink); text-decoration: none; line-height: 1.15; display: inline-block; border-bottom: 2px solid var(--blue); word-break: break-word; }
-.more td a:hover { color: var(--blue); }
-.more td small { display: block; color: var(--ink-2); font-size: 13.5px; margin-top: 6px; }
-.more td:nth-child(2) { color: var(--ink-2); }
-.more .num { text-align: right; white-space: nowrap; width: 18%; padding-right: 0; font-variant-numeric: lining-nums tabular-nums; }
-.more .num b { display: block; font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; color: var(--ink); }
-.more .num small { white-space: normal; }
-@media (max-width: 760px) {
-  .more thead { display: none; }
-  .more tr { display: block; padding: 14px 0; border-bottom: 1px solid var(--rule); }
-  .more td { display: block; width: auto !important; padding: 4px 0; border: 0; }
-  .more .num { text-align: left; display: flex; align-items: baseline; gap: 10px; }
-  .more .num b { font-size: 26px; }
-}
-
-/* ---------- hire ---------- */
-.hire-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1.5px solid var(--ink); background: var(--paper-3); }
-.hire-grid > div { padding: 26px 26px 28px; }
-.hire-grid > div + div { border-left: 1.5px solid var(--ink); }
-.hire-grid h3 { font-family: var(--display); font-size: 30px; font-weight: 700; margin: 0 0 10px; line-height: 1.1; }
-.hire-grid p { margin: 0 0 14px; }
-.hire-grid ul { margin: 0 0 18px; padding-left: 20px; }
-.hire-grid li { margin-bottom: 6px; }
-.contact-line { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; font-size: 20px; }
-.contact-line .addr { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 3vw, 34px); color: var(--ink); text-decoration: none; word-break: break-all; }
-.contact-line .addr:hover { color: var(--blue); }
-.copied { font-size: 14px; color: var(--blue); min-width: 60px; }
+.kit div { padding: 10px 0; border-top: 1px solid var(--line); }
+.kit div:first-child { border-top: 0; padding-top: 0; }
+.kit dt { font: 700 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--red); }
+.kit dd { margin: 3px 0 0; color: #CDD1D9; font-size: 15px; }
+.react { margin-top: 22px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) auto; gap: 24px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px; }
+.react h3 { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; text-transform: uppercase; font-size: 34px; line-height: 1; }
+.react-help { color: var(--mute); font-size: 14.5px; margin: 8px 0 0; }
+.react-pad { display: grid; justify-items: center; gap: 10px; padding: 14px; border-radius: 12px; background: #08090C; border: 1px solid var(--line); cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.react-out { margin: 0; font-family: var(--display); font-style: italic; font-weight: 800; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.react-out.jump { color: #FF6B60; }
+.react-out.good { color: var(--purple); }
+.react-best { margin: 0; font: 600 12px var(--mono); color: var(--mute); min-height: 1.3em; }
 
 /* ---------- footer ---------- */
-footer { padding: 56px 0 48px; }
-.tb { border-top: 2px solid var(--ink); max-width: 640px; font-variant-numeric: tabular-nums; }
-.tb div { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--rule); font-size: 15px; }
-.tb div:last-child { border-bottom: 3px double var(--ink); font-weight: 700; }
-.fine { color: var(--ink-2); font-size: 14px; margin-top: 18px; max-width: 64ch; }
+.foot { border-top: 1px solid var(--line); }
+.chequer { height: 48px; background: conic-gradient(#F2F3F5 25%, #0A0B0E 0 50%, #F2F3F5 0 75%, #0A0B0E 0) 0 0 / 24px 24px; animation: chequer 2.2s linear infinite; opacity: .9; }
+@keyframes chequer { to { background-position: 48px 0; } }
+.foot-in { max-width: var(--maxw); margin: 0 auto; padding: 48px var(--pad) 64px; }
+.tb { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 8px 0 18px; }
+.tb div { padding: 14px 18px; border-left: 1px solid var(--line); }
+.tb div:first-child { border-left: 0; }
+.tb span { display: block; font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+.tb b { font-family: var(--display); font-style: italic; font-weight: 800; font-size: 38px; }
 
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* ---------- track map (in the header) ---------- */
+.trackmap { display: flex; align-items: center; gap: 10px; padding: 3px 12px 3px 6px; border: 1px solid var(--line); border-radius: 10px; background: rgba(19,20,27,.6);
+  opacity: 0; transform: translate3d(0, -8px, 0); transition: opacity .5s var(--ease), transform .5s var(--ease); pointer-events: none; }
+.trackmap.show { opacity: 1; transform: none; }
+.trackmap svg { display: block; width: 66px; height: 40px; }
+#track { fill: none; stroke: #2A2D39; stroke-width: 10; stroke-linejoin: round; }
+#track-done { fill: none; stroke: var(--purple); stroke-width: 5; stroke-linejoin: round; stroke-dasharray: 1000; stroke-dashoffset: 1000; }
+#car { fill: var(--red); stroke: #fff; stroke-width: 3; }
+.tm-row { display: grid; grid-template-columns: auto auto; gap: 1px 8px; align-items: center; font: 700 10.5px var(--mono); }
+#tm-sector { background: var(--purple); color: #fff; padding: 0 5px; border-radius: 3px; justify-self: start; }
+#tm-name { color: var(--mute); text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+.tm-lap { grid-column: 1 / -1; color: var(--fg); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1000px) {
-  .hero-grid, .labs, .entry-grid, .about-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  .lede { max-width: 32ch; }
+@media (max-width: 1160px) { .trackmap { display: none; } }
+@media (max-width: 1080px) {
+  .row-btn { grid-template-columns: 46px 6px minmax(0, 1fr) 54px 118px 26px; }
+  .row-btn .gap { display: none; }
+  .detail-in { padding-left: 22px; }
 }
-@media (max-width: 760px) {
-  :root { --gutter: 22px; }
-  body { font-size: 17px; }
-  .row { grid-template-columns: minmax(0, 1fr); }
-  .margin { display: none; }
-  .body { padding: 0 18px 0 calc(var(--gutter) + 12px); }
-  .nav { gap: 16px; font-size: 15px; }
-  .hero { padding-top: 28px; }
-  .name .carry { padding-left: 0.4em; }
-  .lede { font-size: 21px; }
-  .lab { padding: 16px 14px 16px; box-shadow: 4px 4px 0 var(--ink); }
-  .lab h2 { font-size: 25px; }
-  .lab h3 { font-size: 23px; }
-  .buyers { grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
-  .buyer { font-size: 9.5px; border-width: 1px; }
-  .tally dd { font-size: 40px; }
-  .sqllog { font-size: 11px; min-height: 118px; }
-  section { padding-top: 48px; }
+@media (max-width: 920px) {
+  .hero-in { grid-template-columns: minmax(0, 1fr); }
+  .cockpit { max-width: 420px; }
+  .timing { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cell:nth-child(4) { border-left: 0; }
+  .cell:nth-child(n+4) { border-top: 1px solid var(--line); }
+  .labs, .pace, .strategies { grid-template-columns: minmax(0, 1fr); }
   .geo { grid-template-columns: minmax(0, 1fr); }
-  .phone { min-height: 0; max-width: 260px; }
-  .phone .screen { min-height: 150px; }
-  .hire-grid { grid-template-columns: 1fr; }
-  .hire-grid > div + div { border-left: 0; border-top: 1.5px solid var(--ink); }
-  .journal { font-size: 12.5px; }
-  .journal td, .journal th { padding: 5px 3px; }
-  .journal .act { white-space: normal; }
-  .linkbtn { padding: 2px 2px; font-size: 12px; }
-  .stamp { font-size: 13px; padding: 1px 7px; border-width: 2px; }
-  .sqllog { white-space: pre-wrap; word-break: break-all; }
-  .tally { gap: 0 14px; }
+  .phone { max-width: 280px; }
+  .driver { grid-template-columns: minmax(0, 1fr); }
+  .react { grid-template-columns: minmax(0, 1fr); }
+  .tb { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tb div:nth-child(3) { border-left: 0; }
+  .tb div:nth-child(n+3) { border-top: 1px solid var(--line); }
 }
-@media (max-width: 400px) {
-  .race-top { grid-template-columns: minmax(0, 1fr); }
-  .tally { justify-content: start; text-align: left; }
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .banner { height: 54px; gap: 10px; }
+  .flag { display: none; }
+  .nav { gap: 14px; font-size: 13px; margin-left: auto; }
+  .nav a:not(.nav-cta) { display: none; }
+  .hero { padding-top: 84px; }
+  .timing { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cell:nth-child(n) { border-left: 1px solid var(--line); border-top: 1px solid var(--line); }
+  .cell:nth-child(odd) { border-left: 0; }
+  .cell:nth-child(-n+2) { border-top: 0; }
+  .cell:last-child { grid-column: 1 / -1; }
+  .row-btn { grid-template-columns: 36px 4px minmax(0, 1fr) 20px; gap: 10px; padding: 10px 12px 10px 10px; }
+  .row-btn .tyre-cell, .row-btn .stat { display: none; }
+  .rname b { font-size: 19px; white-space: normal; overflow-wrap: anywhere; }
+  .rname span { white-space: normal; }
+  .detail-in { grid-template-columns: minmax(0, 1fr); padding: 4px 16px 18px; }
+  .lab { padding: 0 14px 16px; }
+  .lab-bar { margin: 0 -14px 14px; padding: 10px 14px; }
+  .race-wrap { grid-template-columns: minmax(0, 1fr); }
+  .tally { grid-template-columns: 1fr 1fr; margin-top: 4px; }
+  .lane { grid-template-columns: 56px minmax(0, 1fr) 80px; }
+  .accts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .acct { padding: 8px 10px; }
+  .acct b { font-size: 26px; }
+  .journal { font-size: 11px; }
+  .journal th, .journal td { padding: 6px 5px; }
+  .journal .jt { display: block; }
+  .linkbtn { padding: 2px 3px; font-size: 11px; }
+  .stamp { font-size: 10px; padding: 1px 6px; }
+  .bars li { grid-template-columns: 104px minmax(0, 1fr) 62px; gap: 8px; }
+  .wire li { grid-template-columns: 70px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; transition-delay: 0s !important; }
 }
 
 </style>
@@ -392,371 +491,434 @@ footer { padding: 56px 0 48px; }
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="wrap top">
-  <div class="row">
-    <div class="margin">2026</div>
-    <div class="body">
-      <a class="mark" href="#top">D. Sonawane</a>
-      <nav class="nav" aria-label="Sections">
-        <a href="#labs">Labs</a>
-        <a href="#work">Work</a>
-        <a href="#about">About</a>
-        <a href="#hire">Hire</a>
-      </nav>
-    </div>
+<!-- ===================== START LIGHTS ===================== -->
+<div class="lights" id="lights" aria-hidden="true" hidden>
+  <div class="gantry" id="gantry">
+    <div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div>
   </div>
+  <p class="lights-msg" id="lights-msg">Tap the moment the lights go out</p>
+  <button class="lights-skip" id="lights-skip" type="button">Skip intro ›</button>
+</div>
+
+<!-- ===================== HEADER ===================== -->
+<header class="banner" id="banner">
+  <a class="mark" href="#top" aria-label="Darshan Sonawane, back to top"><span class="mark-slash"></span>D<span class="dot">·</span>SONAWANE</a>
+  <div class="flag" aria-hidden="true"><span class="flag-dot"></span><span id="flag-text">GREEN FLAG</span></div>
+  <div class="trackmap" id="trackmap" aria-hidden="true">
+  <svg viewBox="0 0 200 120">
+    <path id="track" d="M30 92 C 14 92, 10 70, 24 62 L 62 40 C 74 33, 80 22, 96 20 L 150 18 C 172 17, 188 30, 184 48 C 181 62, 166 64, 158 72 C 150 80, 160 96, 142 100 L 44 100 C 38 100, 34 96, 30 92 Z" />
+    <path id="track-done" d="M30 92 C 14 92, 10 70, 24 62 L 62 40 C 74 33, 80 22, 96 20 L 150 18 C 172 17, 188 30, 184 48 C 181 62, 166 64, 158 72 C 150 80, 160 96, 142 100 L 44 100 C 38 100, 34 96, 30 92 Z" pathLength="1000"/>
+    <rect x="26" y="84" width="4" height="16" fill="#F2F3F5"/>
+    <circle id="car" r="9"/>
+  </svg>
+  <div class="tm-row"><span id="tm-sector">S1</span><span id="tm-name">Start</span><span class="tm-lap" id="tm-lap">0:00.000</span></div>
+</div>
+  <nav class="nav" aria-label="Sections">
+    <a href="#grid">Grid</a>
+    <a href="#control">Race control</a>
+    <a href="#pace">Pace</a>
+    <a href="#pitwall" class="nav-cta">Pit wall</a>
+  </nav>
 </header>
 
-<main id="main" class="wrap">
+<main id="main">
 
-<!-- ================= HERO ================= -->
+<!-- ===================== HERO ===================== -->
 <section class="hero" id="top">
-  <div class="row">
-    <div class="margin">Backend ·<br>Android</div>
-    <div class="body">
-      <h1 class="name"><span>Darshan</span><span class="carry">Sonawane</span></h1>
-      <div class="hero-grid">
-        <div>
-          <p class="lede">I build backends that stay correct when twenty people click at once, and Android apps that keep working after you close them.</p>
-          <p class="sub">Java · Spring Boot · PostgreSQL · Kafka · Kotlin · Jetpack Compose. Every repo ships with tests that run on every push, a README anyone can run, and CI that fails below a coverage gate. Open to freelance and full-time backend and Android work.</p>
-          <div class="ctas">
-            <a class="btn" href="#labs">Try the systems</a>
-            <a class="btn ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener">GitHub<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.5 15.6c.4.1.5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.6 7.6 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.7-3.6 3.9.3.3.5.8.5 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 0Z"/></svg></a>
-          </div>
-        </div>
-
-        <!-- LAB 1: oversell race -->
-        <div class="lab" id="lab-race" aria-labelledby="race-h">
-          <h2 id="race-h">Twenty buyers, five units.</h2>
-          <p class="q">Same second, same product. How many orders does the shop accept?</p>
-          <fieldset class="choice" id="race-mode">
-            <legend>Stock update strategy</legend>
-            <label><input type="radio" name="race-mode" value="naive" checked><span>Read stock, then write</span></label>
-            <label><input type="radio" name="race-mode" value="safe"><span>Conditional UPDATE</span></label>
-          </fieldset>
-          <div class="race-top">
-            <ol class="buyers" id="buyers" aria-label="Buyers"></ol>
-            <dl class="tally">
-              <dd id="race-orders">0</dd><dd id="race-stock">5</dd>
-              <dt>orders</dt><dt>stock left</dt>
-            </dl>
-          </div>
-          <pre class="sqllog" id="race-log" aria-live="polite" aria-label="SQL log"></pre>
-          <p class="verdict" id="race-verdict" aria-live="polite"></p>
-          <div class="lab-actions">
-            <button class="btn" id="race-run" type="button">Run the sale</button>
-            <small>From <a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener">ecommerce-backend</a>, where this is an integration test that must pass on every commit.</small>
-          </div>
-        </div>
+  <canvas class="streaks" id="streaks" aria-hidden="true"></canvas>
+  <div class="hero-in">
+    <div class="hero-text">
+      <p class="eyebrow"><span class="num">05</span> Backend &amp; Android engineer</p>
+      <h1 class="title">
+        <span class="line"><span class="word">Darshan</span></span>
+        <span class="line"><span class="word outline">Sonawane</span></span>
+      </h1>
+      <p class="lede">I build backends that stay correct when twenty people click at once, and Android apps that keep working after you close them.</p>
+      <div class="ctas">
+        <a class="btn btn-red" href="#control"><span>Enter race control</span></a>
+        <a class="btn btn-ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener noreferrer"><span>GitHub</span></a>
       </div>
     </div>
+
+    <div class="cockpit" aria-label="Scroll speed telemetry">
+      <div class="shift" id="shift" aria-hidden="true"></div>
+      <svg class="gauge" viewBox="0 0 240 150" aria-hidden="true">
+        <path class="gauge-track" d="M20 130 A100 100 0 0 1 220 130" pathLength="100"/>
+        <path class="gauge-fill" id="gauge-fill" d="M20 130 A100 100 0 0 1 220 130" pathLength="100"/>
+        <g class="ticks" id="ticks"></g>
+      </svg>
+      <div class="readout">
+        <div><b id="kmh">0</b><span>km/h</span></div>
+        <div class="gear"><b id="gear">1</b><span>gear</span></div>
+      </div>
+      <p class="cockpit-hint" id="cockpit-hint">Scroll to accelerate</p>
+    </div>
+  </div>
+
+  <!-- live timing strip -->
+  <div class="timing" id="timing" role="list" aria-label="Headline figures">
+    <div class="cell" role="listitem" data-reveal><span class="lbl">Tests across repos</span><b data-count="3100" data-suffix="+">0</b><i class="secbar purple"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.06s"><span class="lbl">Oversold units</span><b data-count="0">0</b><i class="secbar green"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.12s"><span class="lbl">Double charges</span><b data-count="0">0</b><i class="secbar green"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.18s"><span class="lbl">Unbalanced journals</span><b data-count="0">0</b><i class="secbar green"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.24s"><span class="lbl">Best line coverage</span><b data-count="99.3" data-dec="1" data-suffix="%">0</b><i class="secbar purple"></i></div>
   </div>
 </section>
 
-<!-- ================= LABS ================= -->
-<section id="labs">
-  <div class="row">
-    <div class="margin">Labs<br>1–4</div>
-    <div class="body">
-      <h2 class="sec-title">The failure modes I design against, running in your browser.</h2>
-      <p class="sec-intro">Each panel is a small working model of a real problem from my projects. Break it, then switch on the fix. The same logic that drives these panels is covered by unit tests in the portfolio's own repo.</p>
+<div class="kerb" aria-hidden="true"></div>
 
-      <div class="labs">
-        <!-- LAB 2: idempotent payments -->
-        <div class="lab" id="lab-pay" aria-labelledby="pay-h">
-          <h3 id="pay-h">Pay ₹499, lose the response twice.</h3>
-          <p class="q">Your 4G drops after the server charges you but before you see "Paid". The app retries. Then retries again.</p>
-          <label class="switch"><input type="checkbox" id="pay-key"><span class="track" aria-hidden="true"></span><span>Send an <code>Idempotency-Key</code> header</span></label>
-          <div class="lab-actions" style="margin-top:0">
-            <button class="btn" id="pay-run" type="button">Pay ₹499</button>
-          </div>
-          <ol class="wire" id="pay-wire" aria-live="polite" aria-label="Requests on the wire"></ol>
-          <div class="stmt" id="pay-stmt" aria-live="polite"></div>
-          <p class="verdict" id="pay-verdict"></p>
-        </div>
-
-        <!-- LAB 3: ledger -->
-        <div class="lab" id="lab-ledger" aria-labelledby="ledger-h">
-          <h3 id="ledger-h">Money is never a number you overwrite.</h3>
-          <p class="q">A double-entry, append-only ledger. Try to edit a row. Try to approve your own big transfer.</p>
-          <div class="accts" id="accts"></div>
-          <div class="pending" id="pending"></div>
-          <div class="ops">
-            <button class="btn ghost" type="button" data-op="t1">Asha → Ravi ₹1,500</button>
-            <button class="btn ghost" type="button" data-op="t2">Ravi → Asha ₹3,000</button>
-            <button class="btn ghost" type="button" data-op="big">Asha → Ravi ₹6,000</button>
-            <button class="btn ghost" type="button" data-op="bad">Post unbalanced journal</button>
-            <button class="btn ghost" type="button" data-op="reset">Reset</button>
-          </div>
-          <div class="journal-scroll">
-            <table class="journal" aria-label="Ledger entries">
-              <thead><tr><th>Journal</th><th>Account</th><th class="num">Debit</th><th class="num">Credit</th><th class="act"></th></tr></thead>
-              <tbody id="journal"></tbody>
-              <tfoot><tr><td colspan="2">Trial balance</td><td class="num" id="tb-d"></td><td class="num" id="tb-c"></td><td class="act" id="tb-stamp"></td></tr></tfoot>
-            </table>
-          </div>
-          <div id="ledger-notice"></div>
-        </div>
-      </div>
-    </div>
+<!-- ===================== GRID (timing tower) ===================== -->
+<section class="sec" id="grid">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">01 / The grid</p>
+    <h2>Nine repos. Each built around one guarantee.</h2>
+    <p class="sec-intro">Ranked like a timing tower. Tap a row to open its design decisions; every figure is copied from the repository's own README.</p>
   </div>
+  <div class="tower" id="tower" role="list"></div>
 </section>
 
-<!-- ================= WORK ================= -->
-<section id="work">
-  <div class="row">
-    <div class="margin">Work</div>
-    <div class="body">
-      <h2 class="sec-title">Three systems, each built around one hard guarantee.</h2>
-      <p class="sec-intro">Not tutorials. Each one started from a question I could not answer with a CRUD app, and each one is covered by tests that run on every push.</p>
-    </div>
+<div class="kerb" aria-hidden="true"></div>
+
+<!-- ===================== RACE CONTROL (labs) ===================== -->
+<section class="sec" id="control">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">02 / Race control</p>
+    <h2>Four incidents. Try to cause them.</h2>
+    <p class="sec-intro">Each panel is a working model of a real failure from my projects. Break it, then switch on the fix. The logic behind these panels is covered by unit tests in this site's repo.</p>
   </div>
 
-  <article class="entry row">
-    <div class="margin">Java 21<br>Spring Boot 4<br>PostgreSQL<br>Kafka</div>
-    <div class="body">
-      <div class="entry-grid">
-        <div>
-          <h3><a href="https://github.com/Darshan-05032003/core-banking-ledger" target="_blank" rel="noopener">core-banking-ledger<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 12 12 4M6 4h6v6"/></svg></a></h3>
-          <p class="what">A core banking backend where every rupee movement is a balanced journal in an append-only ledger, corrected only by reversal, and published to Kafka through a transactional outbox so downstream systems see every posting exactly once and in order.</p>
-          <ul class="decisions">
-            <li><b>Lock ordering instead of SERIALIZABLE.</b> A transfer locks both balance rows in ascending account-id order under READ COMMITTED with a lock timeout. Opposite transfers queue instead of deadlocking, and nothing waits forever.</li>
-            <li><b>Idempotency decided by the database.</b> The key is claimed by a unique insert in its own short transaction, so two concurrent retries are settled by a constraint, not by application code.</li>
-            <li><b>Maker-checker with holds.</b> Above a threshold the raiser cannot post. Available balance drops, ledger balance does not, and a different CHECKER role decides. Undecided transfers expire by a ShedLock-guarded sweep.</li>
-            <li><b>Append-only enforced in Postgres.</b> Triggers reject UPDATE, DELETE and TRUNCATE on journal, ledger and audit tables. A nightly job recomputes every balance from the lines and reports any drift as a metric and an audit row.</li>
-          </ul>
-          <p class="stack"><b>Also:</b> keyset pagination for statements, daily interest accrual with HALF_EVEN month-end payout, RFC 9457 problem responses, OpenAPI 3.1, Prometheus metrics, ECS JSON logs, Testcontainers, ArchUnit, multi-stage Docker, GitHub Actions.</p>
+  <div class="labs">
+    <!-- LAB 1 -->
+    <article class="lab" id="lab-race" aria-labelledby="race-h" data-reveal>
+      <header class="lab-bar"><span class="chip red">Incident 01</span><span class="lab-status" id="race-status">Ready</span></header>
+      <h3 id="race-h">20 buyers. 5 units. One second.</h3>
+      <p class="q">Same product, same moment. How many orders does the shop accept?</p>
+      <fieldset class="seg" id="race-mode">
+        <legend class="sr">Stock update strategy</legend>
+        <label><input type="radio" name="race-mode" value="naive" checked><span>Read, then write</span></label>
+        <label><input type="radio" name="race-mode" value="safe"><span>Conditional UPDATE</span></label>
+      </fieldset>
+      <div class="race-wrap">
+        <div class="stage" id="race-stage" aria-label="Buyers racing for five units">
+          <span class="zone-lbl" id="z-grid">Grid</span><span class="zone-lbl" id="z-box">Units</span><span class="zone-lbl red" id="z-over">Oversold</span>
         </div>
-        <dl class="figures">
-          <div><dt>Tests</dt><dd>711</dd></div>
-          <div><dt>Line coverage</dt><dd>98.5%</dd></div>
-          <div><dt>Branch coverage</dt><dd>86.3%</dd></div>
-          <div><dt>Flyway migrations</dt><dd>15</dd></div>
-          <div><dt>Deadlocks under opposite transfers</dt><dd>0</dd></div>
+        <dl class="tally">
+          <div><dt>Orders</dt><dd id="race-orders">0</dd></div>
+          <div><dt>Stock</dt><dd id="race-stock">5</dd></div>
         </dl>
       </div>
-    </div>
-  </article>
-
-  <article class="entry row">
-    <div class="margin">Java 21<br>Spring Boot 4<br>MySQL<br>Redis</div>
-    <div class="body">
-      <div class="entry-grid">
-        <div>
-          <h3><a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener">ecommerce-backend<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 12 12 4M6 4h6v6"/></svg></a></h3>
-          <p class="what">A shop API built around the parts that break under real traffic: stock that cannot be oversold, orders that can be retried safely, refresh tokens that rotate, and emails that only go out after the database commits.</p>
-          <ul class="decisions">
-            <li><b>One conditional UPDATE per line.</b> <code>stock = stock − ? WHERE stock ≥ ?</code>, lines reserved in product-id order. A test fires 20 concurrent buyers at the last 5 units and expects exactly 5 orders. That test is Lab 1 above.</li>
-            <li><b>Idempotent order placement.</b> Key, user, SHA-256 of the body and the response are stored in the order transaction. Replay returns the stored response; same key with a different body is 422. That is Lab 2.</li>
-            <li><b>Refresh-token families.</b> 256-bit opaque tokens stored as hashes, rotated on every use. Replaying a used token revokes the whole family.</li>
-            <li><b>Side effects after commit.</b> Notifications run on <code>@TransactionalEventListener(AFTER_COMMIT)</code> with the correlation id copied to the worker thread. A rolled-back order never sends an email.</li>
-          </ul>
-          <p class="stack"><b>Also:</b> order state machine with audit history, Strategy-pattern payment processors recorded with REQUIRES_NEW, Redis cache evicted after commit, Bucket4j login limits, statement-count tests against N+1.</p>
-        </div>
-        <dl class="figures">
-          <div><dt>Tests</dt><dd>600</dd></div>
-          <div><dt>Line coverage</dt><dd>99.3%</dd></div>
-          <div><dt>Branch coverage</dt><dd>95.0%</dd></div>
-          <div><dt>Oversold units in 20-vs-5 test</dt><dd>0</dd></div>
-          <div><dt>Test sleeps</dt><dd>0</dd></div>
-        </dl>
+      <ol class="ticker" id="race-log" aria-live="polite" aria-label="Race control messages"></ol>
+      <p class="verdict" id="race-verdict" aria-live="polite"></p>
+      <div class="lab-actions">
+        <button class="btn btn-red" id="race-run" type="button"><span>Lights out</span></button>
+        <small>From <a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener noreferrer">ecommerce-backend</a>, where this is an integration test on every commit.</small>
       </div>
-    </div>
-  </article>
+    </article>
 
-  <article class="entry row">
-    <div class="margin">Kotlin<br>Jetpack Compose<br>Firebase<br>Geofencing API</div>
-    <div class="body">
-      <div class="entry-grid">
-        <div>
-          <h3><a href="https://github.com/Darshan-05032003/GeoGuard" target="_blank" rel="noopener">GeoGuard<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 12 12 4M6 4h6v6"/></svg></a></h3>
-          <p class="what">A group creates a safe zone. When any member leaves it, everyone else gets a push, even with the app killed. Built as a take-home assignment for an Android role, with a signed APK in the releases you can install on two phones and try.</p>
-          <ul class="decisions">
-            <li><b>OS geofencing instead of polling GPS.</b> Battery-safe and works in the background with no foreground notification. Trade-off accepted: 1–2 minute latency and a 150 m minimum radius.</li>
-            <li><b>Exit events survive bad networks.</b> BroadcastReceiver → WorkManager → Firestore, with retries. Deterministic event ids (<code>uid_EXIT_time</code>) mean a retry can never create a duplicate alert.</li>
-            <li><b>Fan-out on the server.</b> A Cloud Function sends FCM to every other member, so no secrets ship in the APK and receivers get alerts with the app closed.</li>
-            <li><b>Jitter cooldown and reboot resync.</b> One alert per member per group per 5 minutes; geofences are re-registered after reboot.</li>
-          </ul>
-          <p class="stack"><b>Security rules:</b> only members read a group, users can only add themselves and only report their own exits, push tokens are private, groups cannot be listed.</p>
-        </div>
-        <dl class="figures">
-          <div><dt>Alert latency</dt><dd>≤ 2 min</dd></div>
-          <div><dt>Min reliable radius</dt><dd>150 m</dd></div>
-          <div><dt>Secrets in the APK</dt><dd>0</dd></div>
-          <div><dt>Duplicate alerts on retry</dt><dd>0</dd></div>
-        </dl>
+    <!-- LAB 2 -->
+    <article class="lab" id="lab-pay" aria-labelledby="pay-h" data-reveal style="--d:.08s">
+      <header class="lab-bar"><span class="chip yellow">Incident 02</span><span class="lab-status" id="pay-status">Ready</span></header>
+      <h3 id="pay-h">Pay ₹499. Lose the radio twice.</h3>
+      <p class="q">The server charges you, then your 4G drops before "Paid" arrives. The app retries. Twice.</p>
+      <label class="switch"><input type="checkbox" id="pay-key"><span class="track" aria-hidden="true"></span><span>Send an <code>Idempotency-Key</code></span></label>
+      <div class="lane" id="pay-lane" aria-hidden="true">
+        <div class="node"><b>APP</b><span>₹499</span></div>
+        <div class="road" id="pay-road"></div>
+        <div class="node"><b>PSP</b><span id="pay-charges">0 charges</span></div>
       </div>
+      <ol class="wire" id="pay-wire" aria-live="polite" aria-label="Requests on the wire"></ol>
+      <div class="stmt" id="pay-stmt" aria-live="polite"></div>
+      <p class="verdict" id="pay-verdict"></p>
+      <div class="lab-actions">
+        <button class="btn btn-red" id="pay-run" type="button"><span>Pay ₹499</span></button>
+        <small>From <a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener noreferrer">ecommerce-backend</a> and <a href="https://github.com/Darshan-05032003/PayFlow" target="_blank" rel="noopener noreferrer">PayFlow</a>.</small>
+      </div>
+    </article>
 
-      <!-- LAB 4: geofence -->
-      <div class="lab geo" id="lab-geo" aria-labelledby="geo-h">
+    <!-- LAB 3 -->
+    <article class="lab lab-wide" id="lab-ledger" aria-labelledby="ledger-h" data-reveal>
+      <header class="lab-bar"><span class="chip purple">Incident 03</span><span class="lab-status" id="ledger-status">Books open</span></header>
+      <h3 id="ledger-h">The stewards' ledger can't be edited.</h3>
+      <p class="q">Double-entry and append-only. Try to edit a row. Try to approve your own big transfer. Try to post a journal that doesn't balance.</p>
+      <div class="accts" id="accts"></div>
+      <div class="pending" id="pending"></div>
+      <div class="ops">
+        <button class="btn btn-ghost sm" type="button" data-op="t1"><span>Asha → Ravi ₹1,500</span></button>
+        <button class="btn btn-ghost sm" type="button" data-op="t2"><span>Ravi → Asha ₹3,000</span></button>
+        <button class="btn btn-ghost sm" type="button" data-op="big"><span>Asha → Ravi ₹6,000</span></button>
+        <button class="btn btn-ghost sm danger" type="button" data-op="bad"><span>Post unbalanced journal</span></button>
+        <button class="btn btn-ghost sm" type="button" data-op="reset"><span>Reset</span></button>
+      </div>
+      <div class="journal-scroll">
+        <table class="journal" aria-label="Ledger entries">
+          <thead><tr><th>Journal</th><th>Account</th><th class="num">Debit</th><th class="num">Credit</th><th class="act"><span class="sr">Actions</span></th></tr></thead>
+          <tbody id="journal"></tbody>
+          <tfoot><tr><td colspan="2">Trial balance</td><td class="num" id="tb-d"></td><td class="num" id="tb-c"></td><td class="act" id="tb-stamp"></td></tr></tfoot>
+        </table>
+      </div>
+      <div id="ledger-notice" aria-live="polite"></div>
+      <div class="lab-actions"><small>From <a href="https://github.com/Darshan-05032003/core-banking-ledger" target="_blank" rel="noopener noreferrer">core-banking-ledger</a>, where Postgres triggers reject UPDATE and DELETE on the ledger.</small></div>
+    </article>
+
+    <!-- LAB 4 -->
+    <article class="lab lab-wide" id="lab-geo" aria-labelledby="geo-h" data-reveal>
+      <header class="lab-bar"><span class="chip green">Incident 04</span><span class="lab-status" id="geo-status">Inside track limits</span></header>
+      <h3 id="geo-h">Drag Asha past track limits.</h3>
+      <p class="q">Her phone is in her pocket, app closed. Watch what reaches Ravi, and what the 5-minute cooldown swallows.</p>
+      <div class="geo">
         <div>
-          <h3 id="geo-h">Drag Asha out of the zone.</h3>
-          <p class="q">Her phone is in her pocket, app closed. Watch what reaches Ravi's phone, and what the 5-minute cooldown swallows.</p>
-          <svg class="map" id="geo-map" viewBox="0 0 420 300" role="img" aria-label="Map with a circular safe zone; drag the marker to move Asha">
+          <svg class="map" id="geo-map" viewBox="0 0 420 300" role="img" aria-label="Map with a circular safe zone; drag the marker or use arrow keys to move Asha">
             <defs>
-              <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0v30" fill="none" stroke="#BFD0C8" stroke-width="1"/></pattern>
+              <pattern id="g-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0v30" fill="none" stroke="#1E212B" stroke-width="1"/></pattern>
+              <pattern id="g-kerb" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="12" fill="#FF2B1F"/><rect x="6" width="6" height="12" fill="#F2F3F5"/></pattern>
             </defs>
-            <rect width="420" height="300" fill="url(#grid)"/>
-            <path d="M0 210 C 80 190, 140 240, 220 215 S 360 170, 420 190" fill="none" stroke="#C7D5CC" stroke-width="14" stroke-linecap="round"/>
-            <path d="M150 0 C 160 80, 120 140, 160 300" fill="none" stroke="#C7D5CC" stroke-width="10" stroke-linecap="round"/>
-            <circle id="geo-zone" cx="200" cy="150" r="95" fill="rgba(36,67,176,0.10)" stroke="#2443B0" stroke-width="2" stroke-dasharray="6 5"/>
-            <text x="200" y="68" text-anchor="middle" font-size="12" fill="#2443B0" font-family="inherit">Safe zone · 300 m</text>
-            <g id="geo-ravi"><circle cx="230" cy="170" r="9" fill="#15213B"/><text x="245" y="174" font-size="12" fill="#15213B">Ravi</text></g>
+            <rect width="420" height="300" fill="#0E0F14"/>
+            <rect width="420" height="300" fill="url(#g-grid)"/>
+            <path d="M-10 222 C 70 196, 140 252, 230 222 S 360 168, 430 196" fill="none" stroke="#1B1D26" stroke-width="26"/>
+            <path d="M-10 222 C 70 196, 140 252, 230 222 S 360 168, 430 196" fill="none" stroke="#2A2D39" stroke-width="2" stroke-dasharray="10 10"/>
+            <circle cx="200" cy="150" r="99" fill="none" stroke="url(#g-kerb)" stroke-width="6"/>
+            <circle id="geo-zone" cx="200" cy="150" r="95" fill="rgba(48,224,122,.07)"/>
+            <text x="200" y="40" text-anchor="middle" class="map-lbl">TRACK LIMITS · 300 m</text>
+            <g><circle cx="232" cy="172" r="8" fill="#F2F3F5"/><text x="246" y="176" class="map-name">Ravi</text></g>
             <g class="dot" id="geo-dot" tabindex="0" role="slider" aria-label="Asha's position. Use arrow keys to move." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="inside the zone">
-              <circle id="geo-dot-c" cx="180" cy="140" r="16" fill="#2443B0" opacity="0.25"/>
-              <circle id="geo-dot-i" cx="180" cy="140" r="9" fill="#2443B0" stroke="#F1F5EE" stroke-width="2"/>
-              <text id="geo-dot-t" x="180" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#15213B">Asha</text>
+              <circle id="geo-halo" cx="180" cy="140" r="18" fill="#30E07A" opacity=".22"/>
+              <circle id="geo-car" cx="180" cy="140" r="9" fill="#30E07A" stroke="#0A0B0E" stroke-width="2"/>
+              <text id="geo-name" x="180" y="120" text-anchor="middle" class="map-name b">Asha</text>
             </g>
           </svg>
           <ol class="pipeline" id="geo-pipe">
-            <li data-step="os">Android Geofencing API: EXIT transition</li>
-            <li data-step="worker">BroadcastReceiver → WorkManager (retries offline)</li>
-            <li data-step="fs">Firestore: events/asha_EXIT_&lt;time&gt; (deterministic id)</li>
-            <li data-step="fn">Cloud Function: fan out to other members</li>
-            <li data-step="fcm">FCM push → Ravi's phone</li>
+            <li data-step="os"><span>S1</span>Android Geofencing API: EXIT</li>
+            <li data-step="worker"><span>S2</span>BroadcastReceiver → WorkManager (retries offline)</li>
+            <li data-step="fs"><span>S3</span>Firestore: events/asha_EXIT_&lt;time&gt; (deterministic id)</li>
+            <li data-step="fn"><span>S4</span>Cloud Function: fan out to other members</li>
+            <li data-step="fcm"><span>S5</span>FCM push → Ravi's phone</li>
           </ol>
           <p class="geo-help" id="geo-help">Keyboard: focus the marker and use the arrow keys.</p>
         </div>
         <div class="phone" aria-label="Ravi's phone">
-          <div class="screen" id="geo-screen" aria-live="polite">
-            <div class="clock" id="geo-clock">10:42</div>
-          </div>
+          <div class="screen" id="geo-screen" aria-live="polite"><div class="clock" id="geo-clock">10:42</div></div>
         </div>
       </div>
-    </div>
-  </article>
+      <div class="lab-actions"><small>From <a href="https://github.com/Darshan-05032003/GeoGuard" target="_blank" rel="noopener noreferrer">GeoGuard</a>: OS geofencing, WorkManager, Firestore, Cloud Functions, FCM.</small></div>
+    </article>
+  </div>
 </section>
 
-<!-- ================= MORE ================= -->
-<section id="more">
-  <div class="row">
-    <div class="margin">More<br>entries</div>
-    <div class="body">
-      <h2 class="sec-title">Six more, each with one number I can defend.</h2>
-      <p class="sec-intro">Same rule as above: a guarantee, a test that would catch its failure, a README that lets you run it. Every figure here is copied from the repository's own README.</p>
-      <table class="more" aria-label="More repositories">
-        <thead><tr><th>Repository</th><th>What it guarantees</th><th class="num">Figure</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/CheckoutKit" target="_blank" rel="noopener">CheckoutKit</a><small>Kotlin Multiplatform · Compose · JitPack</small></td>
-            <td>A drop-in Android payment SDK. A pure payment state machine with all 49 state/event pairs tested, idempotent retries with backoff and jitter, and a reconciliation step so a timeout is never reported as "failed" while the money may have been captured.</td>
-            <td class="num"><b>97.5%</b><small>core line coverage</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/PayFlow" target="_blank" rel="noopener">PayFlow</a><small>Kotlin · Compose · Room · ML Kit</small></td>
-            <td>A UPI payments app with a state machine that cannot enter an illegal state, idempotency keys stored before the PSP call, QR scan-to-pay, AutoPay mandates, Keystore AES-GCM, biometric lock and root detection.</td>
-            <td class="num"><b>1,000</b><small>concurrent payments, zero duplicates</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/transaction-reconciliation-batch" target="_blank" rel="noopener">transaction-reconciliation-batch</a><small>Java 21 · Spring Batch · PostgreSQL</small></td>
-            <td>Nightly reconciliation of counterparty bank statements against the ledger: million-line files loaded exactly once, matched set-wise, every break classified, resolved under maker/approver control, restartable after a mid-run failure without duplicating work.</td>
-            <td class="num"><b>309</b><small>tests · 97.0% line coverage</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/SplitSmart" target="_blank" rel="noopener">SplitSmart</a><small>Kotlin · Compose · Hilt · Gemini</small></td>
-            <td>Photograph a receipt, on-device OCR plus an LLM turns it into line items, split paise-exactly with proportional tax and tip, settle with one-tap UPI links. Offline-first; a regex fallback when the model is unreachable.</td>
-            <td class="num"><b>95.2%</b><small>domain + data coverage</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/Fin_Pay" target="_blank" rel="noopener">FinPay</a><small>Flutter · sqflite</small></td>
-            <td>A fintech UI built test-first: exact-paise ledger, salted credential hashing, idempotent payment flow, physics-based motion, and a stress suite that pushes 100,000 ledger rows and 1,000-tap storms through the real screens.</td>
-            <td class="num"><b>1,500+</b><small>tests · 144 golden baselines</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/ai-customer-support-agent" target="_blank" rel="noopener">ai-customer-support-agent</a><small>Python · evaluation pipeline</small></td>
-            <td>Classifies support tweets by intent, drafts replies grounded in a brand's history, escalates what it cannot answer and explains each decision. Built on 2.8M tweets, with reproducibility and honest evaluation over system size.</td>
-            <td class="num"><b>99.8%</b><small>conversation-link integrity</small></td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="stack">Older work, from Flutter expense trackers to an LSTM stock predictor, is on <a href="https://github.com/Darshan-05032003?tab=repositories" target="_blank" rel="noopener">GitHub</a>.</p>
+<div class="kerb" aria-hidden="true"></div>
+
+<!-- ===================== PACE ===================== -->
+<section class="sec" id="pace">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">03 / Race pace</p>
+    <h2>Telemetry from the repos.</h2>
+    <p class="sec-intro">Purple is the session best. Deltas are to the fastest entry. Coverage gates fail the build if any of these drop.</p>
+  </div>
+  <div class="pace">
+    <div class="chart" data-reveal>
+      <h3>Line coverage</h3>
+      <ol class="bars" id="bars-cov"></ol>
+    </div>
+    <div class="chart" data-reveal style="--d:.08s">
+      <h3>Tests in the suite</h3>
+      <ol class="bars" id="bars-tests"></ol>
     </div>
   </div>
 </section>
 
-<!-- ================= ABOUT ================= -->
-<section id="about">
-  <div class="row">
-    <div class="margin">About</div>
-    <div class="body">
-      <h2 class="sec-title">Why the ledger paper.</h2>
-      <div class="about-grid">
-        <div>
-          <p>Bookkeepers solved "how do we trust a number nobody can un-write?" centuries before databases existed: write every movement twice, never erase, correct with a new entry. Most of what I care about in backend engineering is that same instinct applied to concurrent systems, so this page is set on a ledger.</p>
-          <p>I'm Darshan Sonawane, a backend and Android engineer. The pattern across my repositories is the same: pick the one guarantee that matters (no oversold unit, no double charge, no unbalanced journal, no missed exit event), write the test that would catch its failure, then build until that test is green and keep it green in CI.</p>
-          <p>I learn by building the hard version of the thing: the ledger instead of a to-do app, the race test instead of a screenshot, the state machine with all 49 transitions tested instead of a happy path. What I can show is systems that hold up when you push on them, and the tests that prove it.</p>
-        </div>
-        <dl class="kit">
-          <div><dt>Backend</dt><dd>Java 21, Spring Boot 4, Spring Security, JPA/Hibernate, Flyway, PostgreSQL, MySQL, Redis, Kafka</dd></div>
-          <div><dt>Android</dt><dd>Kotlin, Jetpack Compose, MVVM, Hilt, Room, WorkManager, CameraX, ML Kit, Geofencing API, Keystore, Firebase (Auth, Firestore, Functions, FCM), Flutter</dd></div>
-          <div><dt>Testing</dt><dd>JUnit 5, Mockito, Testcontainers, Awaitility, ArchUnit, JaCoCo and Kover gates in CI, golden tests, load and chaos simulations</dd></div>
-          <div><dt>Delivery</dt><dd>Docker multi-stage, docker compose, GitHub Actions, JitPack, Actuator, Micrometer/Prometheus</dd></div>
-          <div><dt>Also</dt><dd>Kotlin Multiplatform (CheckoutKit core), Spring Batch, Python data and evaluation pipelines</dd></div>
-        </dl>
-      </div>
+<div class="kerb" aria-hidden="true"></div>
+
+<!-- ===================== PIT WALL ===================== -->
+<section class="sec" id="pitwall">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">04 / Pit wall</p>
+    <h2>Box, box. Two strategies.</h2>
+  </div>
+  <div class="strategies">
+    <div class="strat" data-reveal>
+      <p class="tyre-row"><span class="tyre soft">S</span>Strategy A</p>
+      <h3>Freelance</h3>
+      <p>Small, well-scoped builds where correctness matters more than pixels.</p>
+      <ul>
+        <li>REST backends in Spring Boot with tests, Docker and CI from day one</li>
+        <li>Android apps in Kotlin and Compose, including background work and push</li>
+        <li>Fixing concurrency, double-charge and data-integrity bugs in systems you already run</li>
+      </ul>
+      <p class="fine">You get a repo you own, a README anyone can run, and a short walkthrough video.</p>
+    </div>
+    <div class="strat" data-reveal style="--d:.08s">
+      <p class="tyre-row"><span class="tyre hard">H</span>Strategy B</p>
+      <h3>Full-time</h3>
+      <p>Backend or Android SDE roles on teams that care how systems behave under load.</p>
+      <ul>
+        <li>Comfortable owning a service end to end: schema, API, tests, deploy</li>
+        <li>Writes the README and the design decision, not just the code</li>
+        <li>Productive in Java/Spring and Kotlin/Compose codebases from day one</li>
+      </ul>
+      <p class="fine">Resume on request; the repositories on this page are the real portfolio.</p>
     </div>
   </div>
-</section>
 
-<!-- ================= HIRE ================= -->
-<section id="hire">
-  <div class="row">
-    <div class="margin">Hire</div>
-    <div class="body">
-      <h2 class="sec-title">Two ways to work with me.</h2>
-      <div class="hire-grid">
-        <div>
-          <h3>Freelance</h3>
-          <p>Small, well-scoped builds where correctness matters more than pixels.</p>
-          <ul>
-            <li>REST backends in Spring Boot with tests, Docker and CI from day one</li>
-            <li>Android apps in Kotlin and Compose, including background work and push</li>
-            <li>Fixing concurrency, double-charge and data-integrity bugs in existing systems</li>
-          </ul>
-          <p>You get a repo you own, a README anyone can run, and a short Loom walkthrough.</p>
-        </div>
-        <div>
-          <h3>Full-time</h3>
-          <p>Backend or Android SDE-1 roles on teams that care about how systems behave under load.</p>
-          <ul>
-            <li>Comfortable owning a service end to end: schema, API, tests, deploy</li>
-            <li>Writes the README and the ADR, not just the code</li>
-            <li>Productive in Java/Spring and Kotlin/Compose codebases from day one</li>
-          </ul>
-          <p>Resume on request; the repositories on this page are the real portfolio.</p>
-        </div>
-      </div>
-      <div class="contact-line">
-        <a class="addr" href="mailto:sonawanedarshan35@gmail.com">sonawanedarshan35@gmail.com</a>
-        <button class="btn ghost" type="button" id="copy-mail">Copy address</button>
-        <span class="copied" id="copied" aria-live="polite"></span>
-      </div>
-      <div class="ctas" style="margin-top:18px">
-        <a class="btn ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener">GitHub</a>
-      </div>
+  <div class="radio" data-reveal>
+    <p class="radio-lbl">Team radio</p>
+    <a class="radio-addr" href="mailto:sonawanedarshan35@gmail.com">sonawanedarshan35@gmail.com</a>
+    <div class="radio-acts">
+      <button class="btn btn-red" type="button" id="copy-mail"><span>Copy address</span></button>
+      <a class="btn btn-ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener noreferrer"><span>GitHub</span></a>
+      <span class="copied" id="copied" aria-live="polite"></span>
     </div>
+  </div>
+
+  <div class="driver" data-reveal>
+    <div>
+      <p class="sec-num">Driver profile</p>
+      <p>The pattern across my repositories is the same: pick the one guarantee that matters (no oversold unit, no double charge, no unbalanced journal, no missed exit event), write the test that would catch its failure, then build until that test is green and keep it green in CI.</p>
+      <p>I learn by building the hard version of the thing: the ledger instead of the to-do app, the race test instead of the screenshot, the state machine with all 49 transitions tested instead of a happy path.</p>
+    </div>
+    <dl class="kit">
+      <div><dt>Backend</dt><dd>Java 21, Spring Boot 4, Spring Security, Spring Batch, JPA/Hibernate, Flyway, PostgreSQL, MySQL, Redis, Kafka</dd></div>
+      <div><dt>Android</dt><dd>Kotlin, Jetpack Compose, MVVM, Hilt, Room, WorkManager, CameraX, ML Kit, Keystore, Firebase, Flutter</dd></div>
+      <div><dt>Testing</dt><dd>JUnit 5, Mockito, Testcontainers, Awaitility, ArchUnit, JaCoCo and Kover gates, golden tests, load and chaos simulations</dd></div>
+      <div><dt>Delivery</dt><dd>Docker multi-stage, docker compose, GitHub Actions, JitPack, Actuator, Micrometer/Prometheus</dd></div>
+    </dl>
+  </div>
+
+  <!-- reaction test -->
+  <div class="react" id="react" data-reveal>
+    <div>
+      <p class="sec-num">Before you go</p>
+      <h3>Reaction test</h3>
+      <p class="react-help" id="react-help">Press start, then tap the panel (or hit Space) the moment the lights go out.</p>
+    </div>
+    <div class="react-pad" id="react-pad" tabindex="0" role="button" aria-label="Reaction test pad">
+      <div class="gantry small" id="react-gantry">
+        <div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div>
+      </div>
+      <p class="react-out" id="react-out" aria-live="polite">—</p>
+      <p class="react-best" id="react-best"></p>
+    </div>
+    <button class="btn btn-red" type="button" id="react-start"><span>Start</span></button>
   </div>
 </section>
 </main>
 
-<footer class="wrap">
-  <div class="row">
-    <div class="margin">Closing<br>balance</div>
-    <div class="body">
-      <div class="tb">
-        <div><span>Tests across the repos on this page</span><span>3,100+</span></div>
-        <div><span>Oversold units</span><span>0</span></div>
-        <div><span>Double charges</span><span>0</span></div>
-        <div><span>Unbalanced journals accepted</span><span>0</span></div>
-        <div><span>Books</span><span>Balanced</span></div>
-      </div>
-      <p class="fine">This page is a single HTML file with no framework and no tracking. The lab simulations are covered by unit tests in <a href="https://github.com/Darshan-05032003/Portfolio" target="_blank" rel="noopener">its repository</a>. Set in Bodoni Moda and Schibsted Grotesk. © Darshan Sonawane, 2026.</p>
+<footer class="foot">
+  <div class="chequer" aria-hidden="true"></div>
+  <div class="foot-in">
+    <p class="sec-num">Chequered flag · closing balance</p>
+    <div class="tb">
+      <div><span>Tests across the repos on this page</span><b>3,100+</b></div>
+      <div><span>Oversold units</span><b>0</b></div>
+      <div><span>Double charges</span><b>0</b></div>
+      <div><span>Unbalanced journals accepted</span><b>0</b></div>
     </div>
+    <p class="fine">One HTML file, no framework, no tracking. Animations run on transforms and opacity with frame-rate-independent smoothing; the math and the lab simulations are unit-tested in <a href="https://github.com/Darshan-05032003/Portfolio" target="_blank" rel="noopener noreferrer">the repository</a>. © Darshan Sonawane, 2026.</p>
   </div>
 </footer>
 
-<script>
-/* Simulation engines for the portfolio labs. Pure logic, no DOM.
+
+
+<script>/* Pure math behind the portfolio's animations: smoothing, easing, scroll telemetry,
+   start lights and the race-lab layout. No DOM. Browser: window.Motion. Node: module.exports. */
+(function (root) {
+  'use strict';
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  // Exponential smoothing that gives the same curve at any frame rate.
+  function damp(current, target, lambda, dt) {
+    return lerp(current, target, 1 - Math.exp(-lambda * dt));
+  }
+
+  const ease = {
+    outCubic: (t) => 1 - Math.pow(1 - t, 3),
+    inOutCubic: (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2),
+    outExpo: (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t)),
+    outQuint: (t) => 1 - Math.pow(1 - t, 5)
+  };
+
+  function scrollProgress(scrollY, scrollHeight, innerHeight) {
+    const max = scrollHeight - innerHeight;
+    if (max <= 0) return 0;
+    return clamp(scrollY / max, 0, 1);
+  }
+
+  function sectorAt(progress, boundaries) {
+    let idx = 0;
+    for (let i = 0; i < boundaries.length; i++) if (progress >= boundaries[i]) idx = i;
+    return idx;
+  }
+
+  // ---- scroll speed as car telemetry ----
+  const TOP_SPEED = 340;
+  const GEARS = [0, 70, 110, 150, 190, 230, 270, 305]; // speed where gears 1..8 begin
+
+  function speedKmh(pxPerSecond) {
+    return TOP_SPEED * (1 - Math.exp(-Math.abs(pxPerSecond) / 2600));
+  }
+  function gearFor(kmh) {
+    let g = 1;
+    for (let i = 0; i < GEARS.length; i++) if (kmh >= GEARS[i]) g = i + 1;
+    return g;
+  }
+  function rpmFor(kmh) {
+    const g = gearFor(kmh);
+    const lo = GEARS[g - 1];
+    const hi = g < GEARS.length ? GEARS[g] : TOP_SPEED;
+    return 0.35 + 0.65 * clamp((kmh - lo) / (hi - lo), 0, 1);
+  }
+  function shiftLights(rpmFraction, n) {
+    return Math.floor(clamp(rpmFraction, 0, 1) * n);
+  }
+
+  // ---- start lights and the reaction test ----
+  function lightsSchedule(opts) {
+    const { lights, stepMs, minHoldMs, maxHoldMs, rand } = opts;
+    const onAt = [];
+    for (let i = 1; i <= lights; i++) onAt.push(i * stepMs);
+    const hold = minHoldMs + Math.floor(rand() * (maxHoldMs - minHoldMs));
+    return { onAt, outAt: onAt[onAt.length - 1] + hold };
+  }
+  function judgeReaction(clickAt, outAt) {
+    if (clickAt < outAt) return { jumpStart: true, ms: 0 };
+    return { jumpStart: false, ms: Math.round(clickAt - outAt) };
+  }
+  const formatReaction = (ms) => (ms / 1000).toFixed(3) + ' s';
+  function formatLap(ms) {
+    ms = Math.max(0, Math.floor(ms));
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return m + ':' + String(s).padStart(2, '0') + '.' + String(ms % 1000).padStart(3, '0');
+  }
+
+  // ---- race lab: 20 cars on a staggered grid, 5 boxes, 15 overflow slots ----
+  function raceLayout(width) {
+    const gap = 4, minSep = 12, chipH = 26, rowH = 34;
+    const chipW = Math.min(60, (width - minSep - 7 * gap) / 8);
+    const colX = (c) => c * (chipW + gap);
+    const right = width - (4 * chipW + 3 * gap);
+    const grid = [];
+    for (let i = 0; i < 20; i++) {
+      const r = Math.floor(i / 4), c = i % 4;
+      grid.push({ x: colX(c), y: r * rowH + (c % 2) * (rowH / 2) });
+    }
+    const boxes = [];
+    for (let r = 0; r < 5; r++) boxes.push({ x: right, y: r * rowH + 8 });
+    const overflow = [];
+    for (let k = 0; k < 3; k++) for (let r = 0; r < 5; r++) overflow.push({ x: right + (k + 1) * (chipW + gap), y: r * rowH + 8 });
+    return { chipW, chipH, height: 5 * rowH + rowH / 2, grid, boxes, overflow, boxesX: right };
+  }
+
+  const api = {
+    clamp, lerp, damp, ease, scrollProgress, sectorAt,
+    TOP_SPEED, GEARS, speedKmh, gearFor, rpmFor, shiftLights,
+    lightsSchedule, judgeReaction, formatReaction, formatLap, raceLayout
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Motion = api;
+})(typeof window !== 'undefined' ? window : this);
+</script>
+<script>/* Simulation engines for the portfolio labs. Pure logic, no DOM.
    Works in the browser (window.Sim) and in Node (module.exports) for unit tests. */
 (function (root) {
   'use strict';
@@ -1012,193 +1174,517 @@ footer { padding: 56px 0 48px; }
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Sim = api;
 })(typeof window !== 'undefined' ? window : this);
-
 </script>
-<script>
-/* Wiring for the four labs. Depends on window.Sim (sim.js). */
+<script>/* Race-weekend portfolio. Depends on window.Motion (motion.js) and window.Sim (sim.js).
+   One requestAnimationFrame loop drives everything scroll-linked; labs use CSS transitions
+   and the Web Animations API on transform/opacity only. */
 (function () {
   'use strict';
-  const S = window.Sim;
+  const M = window.Motion, S = window.Sim;
   const $ = (id) => document.getElementById(id);
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
-  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const store = {
+    get(k) { try { return window.sessionStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { window.sessionStorage.setItem(k, v); } catch (e) { /* storage unavailable */ } }
+  };
 
-  /* ---------------- Lab 1: race ---------------- */
-  (function raceLab() {
-    const buyersEl = $('buyers'), log = $('race-log'), verdict = $('race-verdict');
-    const ordersEl = $('race-orders'), stockEl = $('race-stock'), runBtn = $('race-run');
-    if (!buyersEl) return;
-    const N = 20, STOCK = 5;
-    const SEEDS = [6, 15, 29, 63, 47, 19, 62, 71, 70, 25];
-    let running = false, runIdx = 0;
+  /* ================= flag in the header ================= */
+  const flagEl = document.querySelector('.flag'), flagText = $('flag-text');
+  let flagTimer = 0;
+  function setFlag(kind, text, ms) {
+    clearTimeout(flagTimer);
+    flagEl.classList.remove('red', 'yellow');
+    if (kind) flagEl.classList.add(kind);
+    flagText.textContent = text;
+    if (ms) flagTimer = setTimeout(() => setFlag(null, 'GREEN FLAG'), ms);
+  }
 
-    function reset() {
-      buyersEl.innerHTML = '';
-      for (let i = 0; i < N; i++) {
-        const li = document.createElement('li');
-        li.className = 'buyer'; li.id = 'buyer-' + i; li.textContent = 'B' + (i + 1);
-        li.setAttribute('aria-label', 'Buyer ' + (i + 1) + ': waiting');
-        buyersEl.appendChild(li);
-      }
-      ordersEl.textContent = '0'; ordersEl.classList.remove('bad');
-      stockEl.textContent = String(STOCK); stockEl.classList.remove('bad');
-      log.innerHTML = ''; verdict.textContent = ''; verdict.className = 'verdict';
+  /* ================= start lights intro ================= */
+  function startHero() {
+    document.querySelector('.title').classList.add('in');
+    document.querySelector('.hero-text').classList.add('in');
+    document.querySelector('.cockpit').classList.add('in');
+  }
+  (function intro() {
+    const box = $('lights');
+    if (reduce || store.get('lights-seen')) { startHero(); return; }
+    store.set('lights-seen', '1');
+    const pods = box.querySelectorAll('.pod'), msg = $('lights-msg');
+    box.hidden = false; document.body.classList.add('locked');
+    const sched = M.lightsSchedule({ lights: 5, stepMs: 380, minHoldMs: 250, maxHoldMs: 750, rand: Math.random });
+    const t0 = performance.now();
+    const timers = [];
+    let outAt = Infinity, done = false, reacted = false;
+    sched.onAt.forEach((t, i) => timers.push(setTimeout(() => pods[i].classList.add('on'), t)));
+    timers.push(setTimeout(() => {
+      pods.forEach((p) => p.classList.remove('on'));
+      outAt = performance.now() - t0;
+      if (!reacted) { msg.textContent = 'Lights out'; msg.classList.add('big'); }
+      timers.push(setTimeout(finish, 750));
+    }, sched.outAt));
+    function finish() {
+      if (done) return; done = true;
+      timers.forEach(clearTimeout);
+      box.classList.add('go');
+      document.body.classList.remove('locked');
+      startHero();
+      setTimeout(() => { box.hidden = true; }, 900);
     }
-    function line(cls, text) {
-      const span = document.createElement('span');
-      span.className = cls; span.textContent = text + '\n';
-      log.appendChild(span);
-      while (log.childNodes.length > 7) log.removeChild(log.firstChild);
-    }
-    function mode() { return document.querySelector('input[name="race-mode"]:checked').value; }
-
-    async function run() {
-      if (running) return;
-      running = true; runBtn.disabled = true; reset();
-      const m = mode();
-      const res = S.race({ mode: m, buyers: N, stock: STOCK, seed: SEEDS[runIdx++ % SEEDS.length] });
-      let orders = 0, stock = STOCK;
-      line('no', m === 'naive' ? '-- read-modify-write, no lock' : '-- UPDATE product SET stock = stock - 1 WHERE id = 7 AND stock >= 1');
-      let last = 0;
-      for (const e of res.events) {
-        await wait(Math.min(220, Math.max(30, (e.t - last) * 900)));
-        last = e.t;
-        const b = $('buyer-' + e.buyer);
-        if (e.type === 'read') { b.classList.add('reading'); b.setAttribute('aria-label', 'Buyer ' + (e.buyer + 1) + ' read stock ' + e.stockSeen); line('no', 'B' + (e.buyer + 1) + '  SELECT stock → ' + e.stockSeen); continue; }
-        if (e.type === 'request') { b.classList.add('reading'); continue; }
-        b.classList.remove('reading');
-        if (e.type === 'order') {
-          orders++;
-          const phantom = orders > STOCK;
-          b.classList.add(phantom ? 'phantom' : 'ordered');
-          b.setAttribute('aria-label', 'Buyer ' + (e.buyer + 1) + (phantom ? ' ordered a unit that does not exist' : ' ordered'));
-          stock = m === 'naive' ? e.stockAfter : e.stockAfter;
-          if (m === 'naive') line(phantom ? 'bad' : 'ok', 'B' + (e.buyer + 1) + '  UPDATE stock = ' + e.stockSeen + ' - 1   -- saw ' + e.stockSeen + (phantom ? '  ← phantom unit' : ''));
-          else line('ok', 'B' + (e.buyer + 1) + '  UPDATE … stock >= 1 → 1 row   (' + e.stockAfter + ' left)');
-          ordersEl.textContent = String(orders);
-          if (phantom) { ordersEl.classList.add('bad'); }
-          stockEl.textContent = String(stock);
-        } else {
-          b.classList.add('rejected');
-          b.setAttribute('aria-label', 'Buyer ' + (e.buyer + 1) + ' rejected, out of stock');
-          if (m === 'naive') line('no', 'B' + (e.buyer + 1) + '  saw 0 → 409 Out of stock');
-          else line('no', 'B' + (e.buyer + 1) + '  UPDATE … stock >= 1 → 0 rows → 409');
-        }
-      }
-      if (m === 'naive') {
-        verdict.className = 'verdict bad';
-        verdict.innerHTML = '<strong>' + res.orders + ' orders for ' + STOCK + ' units.</strong> ' + res.oversold + ' customers paid for stock that does not exist, because each request trusted the number it read a moment earlier' + (res.finalStock > 0 ? ', and the shelf still claims ' + res.finalStock + ' left' : '') + '. Switch to the conditional UPDATE and run it again.';
-      } else {
-        verdict.className = 'verdict good';
-        verdict.innerHTML = '<strong>Exactly ' + res.orders + ' orders, ' + res.rejected + ' clean rejections.</strong> The database decides in one atomic statement; zero affected rows means the whole order rolls back. This is <code>OrderPlacementService</code> in ecommerce-backend, and the test that guards it sends ' + N + ' real threads.';
-      }
-      running = false; runBtn.disabled = false;
-      runBtn.textContent = 'Run again';
-    }
-    reset();
-    runBtn.addEventListener('click', run);
-    document.querySelectorAll('input[name="race-mode"]').forEach((r) => r.addEventListener('change', () => { if (!running) { reset(); runBtn.textContent = 'Run the sale'; } }));
+    box.addEventListener('pointerdown', (e) => {
+      if (e.target.id === 'lights-skip' || reacted) return;
+      reacted = true;
+      const r = M.judgeReaction(performance.now() - t0, outAt);
+      msg.classList.add('big');
+      msg.textContent = r.jumpStart ? 'Jump start' : M.formatReaction(r.ms);
+      if (r.jumpStart) { timers.forEach(clearTimeout); pods.forEach((p) => p.classList.remove('on')); setTimeout(finish, 650); }
+    });
+    $('lights-skip').addEventListener('click', finish);
+    timers.push(setTimeout(finish, 6000)); // never trap anyone behind the intro
   })();
 
-  /* ---------------- Lab 2: payments ---------------- */
+  /* ================= header + nav ================= */
+  const banner = $('banner');
+  const navLinks = [...document.querySelectorAll('.nav a')];
+  const sections = ['top', 'grid', 'control', 'pace', 'pitwall'].map((id) => $(id));
+  const SECTION_NAMES = ['Start', 'The grid', 'Race control', 'Race pace', 'Pit wall'];
+  const navIO = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) navLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  sections.forEach((s) => navIO.observe(s));
+
+  /* ================= reveal on scroll + count-ups ================= */
+  function countUp(b) {
+    const target = parseFloat(b.dataset.count), dec = +(b.dataset.dec || 0), suffix = b.dataset.suffix || '';
+    const fmt = (v) => v.toLocaleString('en-IN', { minimumFractionDigits: dec, maximumFractionDigits: dec }) + suffix;
+    if (reduce || target === 0) { b.textContent = fmt(target); return; }
+    const t0 = performance.now(), dur = 1500;
+    (function step(now) {
+      const k = M.ease.outExpo(M.clamp((now - t0) / dur, 0, 1));
+      b.textContent = fmt(dec ? target * k : Math.round(target * k));
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  const revealIO = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add('in');
+      const b = e.target.querySelector('[data-count]');
+      if (b) countUp(b);
+      revealIO.unobserve(e.target);
+    }
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('[data-reveal]').forEach((n) => revealIO.observe(n));
+
+  /* ================= timing tower ================= */
+  const REPOS = [
+    { name: 'core-banking-ledger', url: 'core-banking-ledger', tag: 'Core banking on a double-entry, append-only ledger', stack: 'Java 21 · Spring Boot 4 · PostgreSQL · Kafka', lang: 'Java', tyre: ['soft', 'J'], stat: '711 tests', cov: '98.5%',
+      points: ['Postgres triggers reject UPDATE, DELETE and TRUNCATE on the ledger; mistakes are corrected by a linked reversal.', 'Transfers lock both balance rows in ascending id order under READ COMMITTED, so opposite transfers queue instead of deadlocking.', 'Maker-checker with holds, idempotency by unique constraint, and a transactional outbox to Kafka.'] },
+    { name: 'ecommerce-backend', url: 'ecommerce-backend', tag: 'A shop API that cannot oversell, double-charge or replay a refresh token', stack: 'Java 21 · Spring Boot 4 · MySQL · Redis', lang: 'Java', tyre: ['soft', 'J'], stat: '600 tests', cov: '99.3%', best: true,
+      points: ['One conditional UPDATE per order line; a test fires 20 concurrent buyers at the last 5 units and expects exactly 5 orders.', 'Idempotent order placement: key, user, body hash and response stored in the order transaction.', 'Rotating refresh-token families; emails sent only after the transaction commits.'] },
+    { name: 'transaction-reconciliation-batch', url: 'transaction-reconciliation-batch', tag: 'Nightly bank reconciliation that explains every break', stack: 'Java 21 · Spring Batch · PostgreSQL', lang: 'Java', tyre: ['soft', 'J'], stat: '309 tests', cov: '97.0%',
+      points: ['Million-line statement files loaded exactly once, with checksums and control totals.', 'Set-wise matching against the ledger; every difference classified as a break.', 'Maker/approver resolution, and restarts after a mid-run failure that never re-post.'] },
+    { name: 'CheckoutKit', url: 'CheckoutKit', tag: 'Drop-in Android payment SDK with an un-breakable state machine', stack: 'Kotlin Multiplatform · Compose · JitPack', lang: 'KMP', tyre: ['med', 'K'], stat: '49/49 pairs', cov: '97.5%',
+      points: ['Pure transition function with all 49 state × event pairs tested, applied with compare-and-set.', 'A timeout is never reported as "failed" while money may be captured: the SDK reconciles by key first.', '10,000-session retry storm never exceeds maxAttempts per key.'] },
+    { name: 'PayFlow', url: 'PayFlow', tag: 'UPI payments built the way a payments team would', stack: 'Kotlin · Compose · Room · ML Kit', lang: 'Kotlin', tyre: ['med', 'K'], stat: '1,000 conc.', cov: '89.0%',
+      points: ['Idempotency keys stored in Room before the PSP call; status polling with backoff and jitter.', 'Keystore AES-GCM, biometric/PIN lock with lockout, root/tamper detection, FLAG_SECURE.', '1,000 concurrent payments against a flaky PSP: zero duplicate or orphan payments.'] },
+    { name: 'GeoGuard', url: 'GeoGuard', tag: 'Group geofence alerts that arrive with the app closed', stack: 'Kotlin · Compose · WorkManager · Firebase', lang: 'Kotlin', tyre: ['med', 'K'], stat: '0 dup alerts', cov: '—',
+      points: ['OS geofencing instead of GPS polling: battery-safe, background-capable.', 'WorkManager uploads with deterministic event ids, so a retry can never duplicate an alert.', 'Server-side FCM fan-out, so no secrets ship in the APK.'] },
+    { name: 'SplitSmart', url: 'SplitSmart', tag: 'Receipt photo to paise-exact split to one-tap UPI settle-up', stack: 'Kotlin · Compose · Hilt · Gemini', lang: 'Kotlin', tyre: ['med', 'K'], stat: 'OCR + LLM', cov: '95.2%',
+      points: ['On-device ML Kit OCR, then Gemini over a pinned client with strict JSON and a regex fallback.', 'Equal, by-item and by-share splits with proportional tax and tip, paise-exact remainders.', '1,000 concurrent model calls with 60% 429s: zero failures, retries spread by full jitter.'] },
+    { name: 'FinPay', url: 'Fin_Pay', tag: 'A fintech UI built test-first', stack: 'Flutter · sqflite', lang: 'Flutter', tyre: ['inter', 'F'], stat: '1,500+ tests', cov: '—',
+      points: ['Exact-paise ledger in sqflite, salted credential hashing, idempotent payment flow.', '144 golden baselines and physics-based motion.', 'Stress suite pushes 100,000 ledger rows and 1,000-tap storms through the real screens.'] },
+    { name: 'ai-customer-support-agent', url: 'ai-customer-support-agent', tag: 'Classifies, drafts grounded replies, escalates and explains', stack: 'Python · evaluation pipeline', lang: 'Python', tyre: ['wet', 'P'], stat: '50 tests', cov: '—',
+      points: ['Built on 2.8M support tweets with 99.8% conversation-link integrity.', 'Intent classification, replies grounded in a brand\'s own history, explicit escalation.', 'Reproducibility and honest evaluation over system size.'] }
+  ];
+  const LANG_COLOR = { Java: '#FF7A1A', KMP: '#8F7BFF', Kotlin: '#B26BFF', Flutter: '#3DA5FF', Python: '#FFD23F' };
+  (function tower() {
+    const root = $('tower');
+    REPOS.forEach((r, i) => {
+      const row = el('div', 'row'); row.setAttribute('role', 'listitem'); row.style.setProperty('--i', i);
+      const btn = el('button', 'row-btn'); btn.type = 'button'; btn.setAttribute('aria-expanded', 'false');
+      const did = 'd-' + i; btn.setAttribute('aria-controls', did);
+      btn.appendChild(el('span', 'pos', String(i + 1)));
+      const stripe = el('span', 'stripe'); stripe.style.background = LANG_COLOR[r.lang]; btn.appendChild(stripe);
+      const nm = el('span', 'rname'); nm.appendChild(el('b', null, r.name)); nm.appendChild(el('span', null, r.tag)); btn.appendChild(nm);
+      const tc = el('span', 'tyre-cell'); tc.appendChild(el('span', 'tyre ' + r.tyre[0], r.tyre[1])); tc.appendChild(document.createTextNode(r.lang)); btn.appendChild(tc);
+      btn.appendChild(el('span', 'stat', r.stat));
+      btn.appendChild(el('span', 'gap' + (r.best ? ' best' : ''), r.cov));
+      btn.appendChild(el('span', 'chev'));
+      const detail = el('div', 'detail'); detail.id = did;
+      const wrap = el('div'); const inner = el('div', 'detail-in');
+      const ul = el('ul'); r.points.forEach((p) => ul.appendChild(el('li', null, p)));
+      const left = el('div'); left.appendChild(el('p', 'fine', r.stack + ' · ' + r.stat + (r.cov !== '—' ? ' · ' + r.cov + ' line coverage' : ''))); left.appendChild(ul);
+      const a = el('a', 'btn btn-ghost sm repo'); a.href = 'https://github.com/Darshan-05032003/' + r.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.appendChild(el('span', null, 'Open repo ↗'));
+      inner.appendChild(left); inner.appendChild(a); wrap.appendChild(inner); detail.appendChild(wrap);
+      btn.addEventListener('click', () => {
+        const open = row.classList.toggle('open');
+        btn.setAttribute('aria-expanded', String(open));
+      });
+      row.appendChild(btn); row.appendChild(detail); root.appendChild(row);
+    });
+    new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { root.classList.add('in'); io.disconnect(); } }, { threshold: 0.08 }).observe(root);
+  })();
+
+  /* ================= pace charts ================= */
+  (function pace() {
+    const cov = [['ecommerce-backend', 99.3], ['core-banking-ledger', 98.5], ['CheckoutKit', 97.5], ['reconciliation-batch', 97.0], ['SplitSmart', 95.2], ['PayFlow', 89.0]];
+    const tests = [['FinPay', 1500], ['core-banking-ledger', 711], ['ecommerce-backend', 600], ['reconciliation-batch', 309], ['ai-support-agent', 50], ['this site', 36]];
+    function bars(id, data, max, fmt, deltaFmt) {
+      const root = $(id), best = data[0][1];
+      data.forEach(([n, v], i) => {
+        const li = el('li'); li.style.setProperty('--i', i);
+        li.appendChild(el('span', 'bn', n));
+        const t = el('span', 'bt'); const f = el('span', 'bf' + (i === 0 ? ' best' : '')); f.style.setProperty('--w', (v / max).toFixed(4)); t.appendChild(f); li.appendChild(t);
+        const bv = el('span', 'bv', fmt(v)); bv.appendChild(el('small', null, i === 0 ? 'fastest' : deltaFmt(v - best))); li.appendChild(bv);
+        root.appendChild(li);
+      });
+    }
+    bars('bars-cov', cov, 100, (v) => v.toFixed(1) + '%', (d) => d.toFixed(1));
+    bars('bars-tests', tests, 1500, (v) => v.toLocaleString('en-IN') + (v === 1500 ? '+' : ''), (d) => '−' + Math.abs(d).toLocaleString('en-IN'));
+  })();
+
+  /* ================= cockpit, streaks, track map: one rAF loop ================= */
+  const kmhEl = $('kmh'), gearEl = $('gear'), fillEl = $('gauge-fill'), shiftEl = $('shift'), hintEl = $('cockpit-hint');
+  const leds = [];
+  for (let i = 0; i < 15; i++) { const d = el('i', i < 5 ? 'g' : i < 10 ? 'r' : 'p'); shiftEl.appendChild(d); leds.push(d); }
+  (function ticks() {
+    const g = $('ticks'), NS = 'http://www.w3.org/2000/svg';
+    for (let s = 0; s <= 350; s += 50) {
+      const a = Math.PI * (1 - s / M.TOP_SPEED);
+      if (s > M.TOP_SPEED) break;
+      const cx = 120, cy = 130, r1 = 84, r2 = 76, rl = 64;
+      const ln = document.createElementNS(NS, 'line');
+      ln.setAttribute('x1', cx + r1 * Math.cos(a)); ln.setAttribute('y1', cy - r1 * Math.sin(a));
+      ln.setAttribute('x2', cx + r2 * Math.cos(a)); ln.setAttribute('y2', cy - r2 * Math.sin(a));
+      g.appendChild(ln);
+      const tx = document.createElementNS(NS, 'text');
+      tx.setAttribute('x', cx + rl * Math.cos(a)); tx.setAttribute('y', cy - rl * Math.sin(a) + 3); tx.setAttribute('text-anchor', 'middle');
+      tx.textContent = s; g.appendChild(tx);
+    }
+  })();
+
+  // speed streaks in the hero
+  const canvas = $('streaks'), ctx = canvas.getContext('2d');
+  let cw = 0, ch = 0, heroVisible = true;
+  const parts = [];
+  function sizeCanvas() {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cw = canvas.clientWidth; ch = canvas.clientHeight;
+    canvas.width = Math.round(cw * dpr); canvas.height = Math.round(ch * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function seedParts() {
+    parts.length = 0;
+    const n = Math.round(M.clamp(cw / 16, 40, 90));
+    for (let i = 0; i < n; i++) parts.push({ x: Math.random() * cw, y: Math.random() * ch, len: 20 + Math.random() * 90, spd: 0.4 + Math.random() * 1.4, a: 0.04 + Math.random() * 0.16, red: Math.random() < 0.12 });
+  }
+  sizeCanvas(); seedParts();
+  new ResizeObserver(() => { sizeCanvas(); seedParts(); }).observe(canvas);
+  new IntersectionObserver((es) => { heroVisible = es[0].isIntersecting; }).observe($('top'));
+
+  function drawStreaks(speed01, dt) {
+    ctx.clearRect(0, 0, cw, ch);
+    const boost = 0.35 + speed01 * 7;
+    const stretch = 0.7 + speed01 * 3.2;
+    ctx.lineCap = 'round';
+    for (const p of parts) {
+      p.x -= p.spd * boost * dt * 120;
+      const L = p.len * stretch;
+      if (p.x + L < 0) { p.x = cw + Math.random() * 60; p.y = Math.random() * ch; }
+      ctx.globalAlpha = Math.min(0.9, p.a * (0.6 + speed01 * 2.2));
+      ctx.strokeStyle = p.red ? '#FF2B1F' : '#F2F3F5';
+      ctx.lineWidth = p.red ? 2 : 1;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + L, p.y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // track map
+  const trackmap = $('trackmap'), track = $('track'), trackDone = $('track-done'), car = $('car');
+  const tmSector = $('tm-sector'), tmName = $('tm-name'), tmLap = $('tm-lap');
+  const trackLen = track.getTotalLength();
+  let bounds = [0, 0.2, 0.5, 0.75, 0.9];
+  function measure() {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bounds = sections.map((s) => (max > 0 ? M.clamp((s.getBoundingClientRect().top + scrollY - innerHeight * 0.4) / max, 0, 1) : 0));
+    bounds[0] = 0;
+  }
+  measure();
+  let measureQueued = false;
+  new ResizeObserver(() => { if (measureQueued) return; measureQueued = true; requestAnimationFrame(() => { measureQueued = false; measure(); }); }).observe(document.body);
+  addEventListener('load', measure);
+
+  let lastY = scrollY, lastT = performance.now(), vel = 0, prog = M.scrollProgress(scrollY, document.documentElement.scrollHeight, innerHeight);
+  let shownKmh = -1, shownGear = -1, shownLit = -1, shownSector = -1, solid = null, mapShown = null;
+  const lapStart = performance.now();
+
+  function frame(now) {
+    const dt = M.clamp((now - lastT) / 1000, 0, 0.1); lastT = now;
+    const y = scrollY;
+    const raw = dt > 0 ? (y - lastY) / dt : 0; lastY = y;
+    const target = Math.abs(raw);
+    vel = M.damp(vel, target, target > vel ? 9 : 2.4, dt);
+    const kmh = reduce ? 0 : M.speedKmh(vel);
+
+    // header
+    const s = y > 24;
+    if (s !== solid) { banner.classList.toggle('solid', s); solid = s; }
+
+    // cockpit (only touch the DOM when a value changes)
+    const k = Math.round(kmh);
+    if (k !== shownKmh) {
+      kmhEl.textContent = k; shownKmh = k;
+      fillEl.style.strokeDasharray = ((kmh / M.TOP_SPEED) * 100).toFixed(2) + ' 100';
+      fillEl.style.opacity = k < 1 ? '0' : '1';
+      if (k > 30) hintEl.textContent = k > 250 ? 'DRS open' : 'Push, push';
+      else hintEl.textContent = 'Scroll to accelerate';
+    }
+    const g = M.gearFor(kmh);
+    if (g !== shownGear) { gearEl.textContent = g; shownGear = g; }
+    const rpm = k < 2 ? 0 : M.rpmFor(kmh);
+    const lit = M.shiftLights(rpm, 15);
+    if (lit !== shownLit) {
+      for (let i = 0; i < 15; i++) leds[i].classList.toggle('on', i < lit);
+      shiftEl.classList.toggle('limiter', g === 8 && lit >= 15);
+      shownLit = lit;
+    }
+
+    // streaks
+    if (heroVisible && !reduce) drawStreaks(kmh / M.TOP_SPEED, dt);
+
+    // track map
+    const p = M.scrollProgress(y, document.documentElement.scrollHeight, innerHeight);
+    prog = reduce ? p : M.damp(prog, p, 7, dt);
+    const show = y > innerHeight * 0.55;
+    if (show !== mapShown) { trackmap.classList.toggle('show', show); mapShown = show; }
+    if (show) {
+      const pt = track.getPointAtLength(prog * trackLen);
+      car.setAttribute('cx', pt.x.toFixed(2)); car.setAttribute('cy', pt.y.toFixed(2));
+      trackDone.style.strokeDashoffset = String(1000 * (1 - prog));
+      const sec = M.sectorAt(p, bounds);
+      if (sec !== shownSector) { tmSector.textContent = 'S' + (sec + 1); tmName.textContent = SECTION_NAMES[sec]; shownSector = sec; }
+      tmLap.textContent = M.formatLap(now - lapStart);
+    }
+    if (!document.hidden) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastT = performance.now(); lastY = scrollY; requestAnimationFrame(frame); } });
+
+  /* ================= Lab 1: 20 buyers, 5 units ================= */
+  (function raceLab() {
+    const stage = $('race-stage'), log = $('race-log'), verdict = $('race-verdict'), status = $('race-status');
+    const ordersEl = $('race-orders'), stockEl = $('race-stock'), runBtn = $('race-run');
+    const N = 20, STOCK = 5;
+    const SEEDS = [6, 15, 29, 63, 47, 19, 62, 71, 70, 25];
+    let L = null, running = false, runIdx = 0, timers = [];
+    const cars = [], where = []; // where[i] = ['grid'|'box'|'over', index]
+    const slots = [];
+
+    for (let i = 0; i < N; i++) {
+      const c = el('div', 'car', String(i + 1)); c.setAttribute('aria-label', 'Buyer ' + (i + 1)); stage.appendChild(c); cars.push(c); where.push(['grid', i]);
+    }
+    for (let i = 0; i < 5; i++) { const sl = el('div', 'slot'); stage.insertBefore(sl, stage.firstChild); slots.push(sl); }
+
+    function pos(i) { const [z, k] = where[i]; return z === 'grid' ? L.grid[k] : z === 'box' ? L.boxes[k] : L.overflow[k]; }
+    function layout() {
+      L = M.raceLayout(stage.clientWidth);
+      stage.style.height = L.height + 'px';
+      slots.forEach((s, k) => { const b = L.boxes[k]; s.style.cssText = 'left:' + (b.x - 3) + 'px;top:' + (b.y - 3) + 'px;width:' + (L.chipW + 6) + 'px;height:' + (L.chipH + 6) + 'px'; });
+      $('z-box').style.left = L.boxesX + 'px';
+      $('z-over').style.left = (L.boxesX + L.chipW + 4) + 'px';
+      cars.forEach((c, i) => { const p = pos(i); c.style.width = L.chipW + 'px'; c.style.height = L.chipH + 'px'; c.style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0)'; });
+    }
+    layout();
+    new ResizeObserver(() => layout()).observe(stage);
+
+    function move(i, zone, k) { where[i] = [zone, k]; const p = pos(i); cars[i].style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0)'; }
+    function say(html, cls) {
+      const li = el('li', cls || ''); li.innerHTML = html; log.appendChild(li);
+      while (log.children.length > 7) log.removeChild(log.firstChild);
+    }
+    function bump(node, val, cls) { node.textContent = String(val); node.className = cls || ''; void node.offsetWidth; node.classList.add('pop'); }
+
+    function reset() {
+      timers.forEach(clearTimeout); timers = [];
+      cars.forEach((c, i) => { c.className = 'car'; move(i, 'grid', i); });
+      stage.classList.remove('over');
+      bump(ordersEl, 0); bump(stockEl, STOCK);
+      log.textContent = ''; verdict.textContent = ''; verdict.className = 'verdict';
+    }
+
+    function run() {
+      if (running) return; running = true; runBtn.disabled = true;
+      reset();
+      const mode = document.querySelector('input[name="race-mode"]:checked').value;
+      const res = S.race({ mode, buyers: N, stock: STOCK, seed: SEEDS[runIdx++ % SEEDS.length] });
+      status.textContent = 'Session live'; status.className = 'lab-status live';
+      setFlag('yellow', 'INCIDENT 01', 0);
+      const scale = reduce ? 0 : 3600;
+      let placed = 0, last = 0;
+      say('<b>RACE CONTROL</b> ' + (mode === 'naive' ? 'Each buyer reads stock, then writes stock − 1' : 'Each buyer runs UPDATE … WHERE stock >= 1'));
+      for (const e of res.events) {
+        const at = 250 + e.t * scale; last = Math.max(last, at);
+        timers.push(setTimeout(() => {
+          const c = cars[e.buyer], n = e.buyer + 1;
+          if (e.type === 'read') { c.classList.add('req'); say('<b>CAR ' + n + '</b> SELECT stock → ' + e.stockSeen); }
+          else if (e.type === 'request') { c.classList.add('req'); say('<b>CAR ' + n + '</b> UPDATE … WHERE stock >= 1'); }
+          else if (e.type === 'order') {
+            c.classList.remove('req'); placed++;
+            if (placed <= STOCK) { c.classList.add('won'); move(e.buyer, 'box', placed - 1); }
+            else { c.classList.add('phantom'); move(e.buyer, 'over', placed - STOCK - 1); stage.classList.add('over'); }
+            bump(ordersEl, placed, placed > STOCK ? 'bad' : '');
+            bump(stockEl, e.stockAfter);
+            if (mode === 'naive') say('<b>CAR ' + n + '</b> UPDATE stock = ' + e.stockAfter + ' (saw ' + e.stockSeen + ')' + (placed > STOCK ? ' · phantom unit' : ''), placed > STOCK ? 'bad' : 'ok');
+            else say('<b>CAR ' + n + '</b> 1 row updated → order ' + placed, 'ok');
+          } else {
+            c.classList.remove('req'); c.classList.add('rej');
+            say('<b>CAR ' + n + '</b> ' + (mode === 'naive' ? 'saw 0 → out of stock → 409' : '0 rows → 409 Conflict'));
+          }
+        }, at));
+      }
+      timers.push(setTimeout(() => {
+        const over = res.orders - STOCK;
+        if (over > 0) {
+          verdict.className = 'verdict bad';
+          verdict.innerHTML = '<strong>' + res.orders + ' orders for ' + STOCK + ' units.</strong> ' + over + ' customers paid for stock that does not exist, because each request trusted a number it read a moment earlier. Switch to Conditional UPDATE and run it again.';
+          status.textContent = 'Oversold'; status.className = 'lab-status bad';
+          setFlag('red', 'RED FLAG · OVERSOLD', 3500);
+        } else {
+          verdict.className = 'verdict good';
+          verdict.innerHTML = '<strong>Exactly ' + STOCK + ' orders, ' + res.rejected + ' clean rejections.</strong> The database decides in one atomic statement; zero affected rows rolls the whole order back. This is <code>OrderPlacementService</code> in ecommerce-backend.';
+          ordersEl.className = 'good'; stockEl.className = 'good';
+          status.textContent = 'Clean session'; status.className = 'lab-status';
+          setFlag(null, 'GREEN FLAG');
+        }
+        running = false; runBtn.disabled = false; runBtn.firstElementChild.textContent = 'Run again';
+      }, last + 700));
+    }
+    runBtn.addEventListener('click', run);
+    document.querySelectorAll('input[name="race-mode"]').forEach((r) => r.addEventListener('change', () => { if (!running) reset(); }));
+  })();
+
+  /* ================= Lab 2: idempotent payments ================= */
   (function payLab() {
-    const wire = $('pay-wire'), stmt = $('pay-stmt'), verdict = $('pay-verdict'), btn = $('pay-run'), keyBox = $('pay-key');
-    if (!wire) return;
+    const road = $('pay-road'), wire = $('pay-wire'), stmt = $('pay-stmt'), verdict = $('pay-verdict');
+    const btn = $('pay-run'), keyBox = $('pay-key'), chargesEl = $('pay-charges'), status = $('pay-status');
     let busy = false;
+    function drive(node, from, to, ms, easing) {
+      if (reduce) { node.style.transform = 'translate3d(' + to + 'px,0,0)'; return Promise.resolve(); }
+      const a = node.animate([{ transform: 'translate3d(' + from + 'px,0,0)' }, { transform: 'translate3d(' + to + 'px,0,0)' }], { duration: ms, easing: easing || 'cubic-bezier(.65,0,.35,1)', fill: 'forwards' });
+      return a.finished;
+    }
+    function line(attempt, html, cls) {
+      const li = el('li'); li.appendChild(el('b', cls || null, attempt)); const sp = el('span', cls || null); sp.innerHTML = html; li.appendChild(sp); wire.appendChild(li);
+    }
     async function run() {
       if (busy) return; busy = true; btn.disabled = true;
-      wire.innerHTML = ''; stmt.innerHTML = ''; verdict.textContent = ''; verdict.className = 'verdict';
+      wire.textContent = ''; stmt.textContent = ''; verdict.textContent = ''; verdict.className = 'verdict'; road.textContent = '';
+      chargesEl.textContent = '0 charges';
+      status.textContent = 'Session live'; status.className = 'lab-status live';
       const useKey = keyBox.checked;
       const server = S.paymentServer();
       const r = S.payWithRetries(server, { useKey, amount: 49900, lostResponses: 2, key: 'idem-7f3a9c' });
+      const w = road.clientWidth;
       for (const a of r.attempts) {
-        const li = document.createElement('li');
-        const hdr = useKey ? ' <code>Idempotency-Key: idem-7f3a9c</code>' : '';
-        li.innerHTML = '<b>Attempt ' + a.attempt + '</b><span>POST /me/orders/42/payments  ₹499' + hdr + '</span>';
-        wire.appendChild(li);
-        await wait(380);
-        const res = document.createElement('li');
+        const req = el('div', 'pkt', useKey ? 'POST · key 7f3a' : 'POST /pay'); road.appendChild(req);
+        const reqW = req.offsetWidth;
+        line('Attempt ' + a.attempt, 'POST /payments ₹499' + (useKey ? ' <code>Idempotency-Key: idem-7f3a9c</code>' : ''));
+        await drive(req, 0, w - reqW - 12, 650);
+        const soFar = useKey ? 1 : a.attempt; // the server has charged this many times by now
+        chargesEl.textContent = soFar + (soFar === 1 ? ' charge' : ' charges');
+        req.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduce ? 1 : 200, fill: 'forwards' });
+        const back = el('div', 'pkt back', a.replayed ? '201 replayed' : '201 Paid'); road.appendChild(back);
+        const bw = back.offsetWidth;
         if (a.lost) {
-          res.innerHTML = '<b class="lost">timeout</b><span class="lost">server answered <code>' + a.status + '</code>' + (a.replayed ? ' (replayed)' : ' (charged ' + a.chargeId + ')') + ', but the response never reached the phone. Retrying…</span>';
+          await drive(back, 0, -(w - bw - 12) * 0.5, 420, 'cubic-bezier(.4,0,1,1)');
+          back.classList.add('lost'); back.textContent = '✕ radio lost';
+          if (!reduce) back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, delay: 250, fill: 'forwards' });
+          line('timeout', 'server answered <code>' + a.status + '</code>' + (a.replayed ? ' (replayed)' : ' (charged ' + esc(a.chargeId) + ')') + ', but the phone never heard it. Retrying…', 'lost');
+          await wait(380);
         } else {
-          res.innerHTML = '<b>' + a.status + '</b><span' + (a.replayed ? ' class="replay"' : '') + '>' + (a.replayed ? '<code>Idempotent-Replayed: true</code> — same stored response, no new charge' : 'Paid. Charge ' + a.chargeId) + '</span>';
+          await drive(back, 0, -(w - bw - 12), 650);
+          line(String(a.status), a.replayed ? '<code>Idempotent-Replayed: true</code>: same stored response, no new charge' : 'Paid. Charge ' + esc(a.chargeId), a.replayed ? 'replay' : '');
         }
-        wire.appendChild(res);
-        await wait(380);
+        await wait(200);
       }
       const n = server.charges.length;
-      let html = '';
-      server.charges.forEach((c, i) => { html += '<div class="stmt-row"><span>' + c.id + ' · Card ending 4417</span><span>' + S.inr(c.amount) + '</span></div>'; });
-      html += '<div class="stmt-row total' + (n > 1 ? ' bad' : '') + '"><span>Charged to customer</span><span>' + S.inr(n * 49900) + '</span></div>';
-      stmt.innerHTML = html;
+      chargesEl.textContent = n + (n === 1 ? ' charge' : ' charges');
+      server.charges.forEach((c) => { const row = el('div', 'stmt-row'); row.appendChild(el('span', null, c.id + ' · card ending 4417')); row.appendChild(el('span', null, S.inr(c.amount))); stmt.appendChild(row); });
+      const tot = el('div', 'stmt-row total ' + (n > 1 ? 'bad' : 'good')); tot.appendChild(el('span', null, 'Charged to customer')); tot.appendChild(el('span', null, S.inr(n * 49900))); stmt.appendChild(tot);
       if (n > 1) {
         verdict.className = 'verdict bad';
         verdict.innerHTML = '<strong>Charged ' + n + ' times for one order.</strong> Every retry looked like a new payment. Flip the switch and pay again.';
+        status.textContent = 'Double charge'; status.className = 'lab-status bad';
+        setFlag('red', 'RED FLAG · DOUBLE CHARGE', 3500);
       } else {
         verdict.className = 'verdict good';
         verdict.innerHTML = '<strong>Charged once.</strong> The key, the user and a SHA-256 of the body are stored with the first response in the same transaction. Retries get that response back; the same key with a different amount gets 422.';
+        status.textContent = 'Clean session'; status.className = 'lab-status';
       }
       busy = false; btn.disabled = false;
     }
     btn.addEventListener('click', run);
   })();
 
-  /* ---------------- Lab 3: ledger ---------------- */
+  /* ================= Lab 3: ledger ================= */
   (function ledgerLab() {
-    const acctsEl = $('accts'), tbody = $('journal'), notice = $('ledger-notice'), pendingEl = $('pending');
-    if (!acctsEl) return;
+    const acctsEl = $('accts'), tbody = $('journal'), notice = $('ledger-notice'), pendingEl = $('pending'), status = $('ledger-status');
     const NAMES = { asha: 'Asha', ravi: 'Ravi', CASH_VAULT: 'Cash vault (GL)' };
     let L;
     function fresh() { L = S.ledger({ accounts: { asha: 1000000, ravi: 200000 }, approvalThreshold: 500000 }); }
     function say(kind, html) { notice.innerHTML = '<p class="notice' + (kind === 'bad' ? ' bad' : '') + '">' + html + '</p>'; }
+    function lb(text, cls, fn, label) { const b = el('button', 'linkbtn' + (cls ? ' ' + cls : ''), text); b.type = 'button'; if (label) b.setAttribute('aria-label', label); b.addEventListener('click', fn); return b; }
 
     function render() {
-      acctsEl.innerHTML = '';
+      acctsEl.textContent = '';
       for (const a of L.accounts()) {
-        const d = document.createElement('div'); d.className = 'acct';
-        const held = L.held(a);
-        d.innerHTML = '<span>' + NAMES[a] + '</span><b>' + S.inr(L.balance(a)) + '</b><span>available ' + S.inr(L.available(a)) + (held ? ' · <span class="held">on hold ' + S.inr(held) + '</span>' : '') + '</span>';
-        acctsEl.appendChild(d);
+        const d = el('div', 'acct'); const held = L.held(a);
+        d.appendChild(el('span', null, NAMES[a])); d.appendChild(el('b', null, S.inr(L.balance(a))));
+        const av = el('span', null, 'available ' + S.inr(L.available(a)));
+        if (held) { av.appendChild(document.createTextNode(' · ')); av.appendChild(el('span', 'held', 'on hold ' + S.inr(held))); }
+        d.appendChild(av); acctsEl.appendChild(d);
       }
-      pendingEl.innerHTML = '';
+      pendingEl.textContent = '';
       for (const t of L.transfers()) {
         if (t.status !== 'PENDING_APPROVAL') continue;
-        const row = document.createElement('div');
-        row.innerHTML = '<span><b>' + t.id + '</b> ' + NAMES[t.from] + ' → ' + NAMES[t.to] + ' ' + S.inr(t.amount) + ' awaits a checker.</span>';
-        const self = document.createElement('button'); self.className = 'linkbtn'; self.type = 'button'; self.textContent = 'Approve as ' + NAMES[t.by];
-        self.addEventListener('click', () => { try { L.approve(t.id, t.by); } catch (e) { say('bad', '<code>403</code> ' + esc(e.message) + '. The server checks the raiser\'s id against the approver\'s token, not a UI flag.'); } render(); });
-        const chk = document.createElement('button'); chk.className = 'linkbtn'; chk.type = 'button'; chk.textContent = 'Approve as Checker';
-        chk.addEventListener('click', () => { const r = L.approve(t.id, 'checker'); say('ok', 'Posted as ' + r.journal + '. The hold is released and the ledger balance moves only now.'); render(); });
-        row.appendChild(self); row.appendChild(chk); pendingEl.appendChild(row);
+        const row = el('div'); row.appendChild(el('span', null, t.id + ' ' + NAMES[t.from] + ' → ' + NAMES[t.to] + ' ' + S.inr(t.amount) + ' awaits a checker.'));
+        row.appendChild(lb('Approve as ' + NAMES[t.by], null, () => { try { L.approve(t.id, t.by); } catch (e) { say('bad', '<code>403</code> ' + esc(e.message) + '. The server checks the raiser\'s id against the approver\'s token, not a UI flag.'); setFlag('yellow', 'STEWARDS · FOUR EYES', 3000); } render(); }));
+        row.appendChild(lb('Approve as Checker', null, () => { const r = L.approve(t.id, 'checker'); say('ok', 'Posted as ' + esc(r.journal) + '. The hold is released and the ledger balance moves only now.'); render(); }));
+        pendingEl.appendChild(row);
       }
-      tbody.innerHTML = '';
-      const journals = L.journals();
-      for (const e of L.entries()) {
+      tbody.textContent = '';
+      const journals = L.journals(), entries = L.entries();
+      for (const e of entries) {
         const j = journals.find((x) => x.id === e.journal);
-        const tr = document.createElement('tr');
-        if (j.type === 'REVERSAL') tr.className = 'rev';
-        const firstLeg = L.entries().find((x) => x.journal === e.journal).id === e.id;
-        tr.innerHTML = '<td>' + (firstLeg ? e.journal + ' <span style="color:var(--ink-2)">' + j.type.toLowerCase() + (j.reversalOf ? ' of ' + j.reversalOf : '') + '</span>' : '') + '</td>' +
-          '<td>' + NAMES[e.account] + '</td>' +
-          '<td class="num">' + (e.side === 'D' ? S.inr(e.amount) : '') + '</td>' +
-          '<td class="num">' + (e.side === 'C' ? S.inr(e.amount) : '') + '</td>' +
-          '<td class="act"></td>';
-        const act = tr.lastElementChild;
-        const ed = document.createElement('button'); ed.className = 'linkbtn danger'; ed.type = 'button'; ed.textContent = 'Edit';
-        ed.setAttribute('aria-label', 'Try to edit entry ' + e.id);
-        ed.addEventListener('click', () => { try { L.update(e.id, { amount: 1 }); } catch (err) { say('bad', '<code>ERROR: ' + esc(err.message) + '</code><br>In core-banking-ledger this is a PostgreSQL trigger on <code>ledger_entry</code>, so even a DBA with a psql shell cannot quietly change history.'); } });
-        act.appendChild(ed);
+        const tr = el('tr'); if (j.type === 'REVERSAL') tr.className = 'rev';
+        const firstLeg = entries.find((x) => x.journal === e.journal).id === e.id;
+        const td1 = el('td');
+        if (firstLeg) { td1.appendChild(document.createTextNode(e.journal + ' ')); td1.appendChild(el('span', 'jt', j.type.toLowerCase() + (j.reversalOf ? ' of ' + j.reversalOf : ''))); }
+        tr.appendChild(td1); tr.appendChild(el('td', null, NAMES[e.account]));
+        tr.appendChild(el('td', 'num', e.side === 'D' ? S.inr(e.amount) : '')); tr.appendChild(el('td', 'num', e.side === 'C' ? S.inr(e.amount) : ''));
+        const act = el('td', 'act');
+        act.appendChild(lb('Edit', 'danger', () => {
+          try { L.update(e.id, { amount: 1 }); } catch (err) {
+            say('bad', '<code>ERROR: ' + esc(err.message) + '</code><br>In core-banking-ledger this is a PostgreSQL trigger on <code>ledger_entry</code>, so even someone with a psql shell cannot quietly change history.');
+            setFlag('yellow', 'STEWARDS · EDIT REFUSED', 3000);
+          }
+        }, 'Try to edit entry ' + e.id));
         if (firstLeg && j.type === 'TRANSFER' && !journals.some((x) => x.reversalOf === j.id)) {
-          const rv = document.createElement('button'); rv.className = 'linkbtn'; rv.type = 'button'; rv.textContent = 'Reverse';
-          rv.addEventListener('click', () => { const r = L.reverse(j.id, 'teller'); say('ok', 'Posted ' + r.journal + ', a mirror-image journal linked by <code>reversal_of</code>. The original stays; the books still balance; a unique constraint means it can only be reversed once.'); render(); });
-          act.appendChild(rv);
+          act.appendChild(lb('Reverse', null, () => { const r = L.reverse(j.id, 'teller'); say('ok', 'Posted ' + esc(r.journal) + ', a mirror-image journal linked by <code>reversal_of</code>. The original stays, the books still balance, and a unique constraint means it can only be reversed once.'); render(); }));
         }
-        tbody.appendChild(tr);
+        tr.appendChild(act); tbody.appendChild(tr);
       }
       const tb = L.trialBalance();
       $('tb-d').textContent = S.inr(tb.debits); $('tb-c').textContent = S.inr(tb.credits);
-      $('tb-stamp').innerHTML = '<span class="stamp' + (tb.balanced ? '' : ' bad') + '">' + (tb.balanced ? 'Balanced' : 'Off') + '</span>';
+      const st = $('tb-stamp'); st.textContent = ''; st.appendChild(el('span', 'stamp' + (tb.balanced ? '' : ' bad'), tb.balanced ? 'Balanced' : 'Off'));
+      status.textContent = tb.balanced ? 'Books balanced' : 'Books off'; status.className = 'lab-status' + (tb.balanced ? '' : ' bad');
+      const sc = tbody.parentElement.parentElement; sc.scrollTop = sc.scrollHeight;
     }
 
     document.querySelectorAll('[data-op]').forEach((b) => b.addEventListener('click', () => {
@@ -1209,86 +1695,123 @@ footer { padding: 56px 0 48px; }
         if (op === 't2') { const r = L.transfer({ from: 'ravi', to: 'asha', amount: 300000, by: 'ravi' }); r.status === 'POSTED' ? say('ok', 'Posted ' + r.journal + '.') : say('bad', '<code>422 INSUFFICIENT_FUNDS</code> Nothing was written. The FAILED transfer row is kept for audit; the ledger is untouched.'); }
         if (op === 'big') { const r = L.transfer({ from: 'asha', to: 'ravi', amount: 600000, by: 'asha' }); r.status === 'PENDING_APPROVAL' ? say('ok', '<code>202 Accepted</code> Above ₹5,000 a transfer needs a second pair of eyes. ₹6,000 is now on hold: Asha\'s available balance dropped, her ledger balance did not.') : say('bad', '<code>422</code> ' + esc(r.reason || r.status) + '.'); }
         if (op === 'bad') { L.post('MANUAL', [{ account: 'asha', side: 'D', amount: 100000 }, { account: 'ravi', side: 'C', amount: 99900 }]); }
-      } catch (e) { say('bad', '<code>' + esc(e.message) + '</code><br><code>PostingService</code> sums the legs before anything touches the database. Debits ₹1,000, credits ₹999: refused.'); }
+      } catch (e) {
+        say('bad', '<code>' + esc(e.message) + '</code><br><code>PostingService</code> sums the legs before anything touches the database. Debits ₹1,000, credits ₹999: refused.');
+        setFlag('yellow', 'STEWARDS · REFUSED', 3000);
+      }
       render();
     }));
     fresh(); render();
   })();
 
-  /* ---------------- Lab 4: geofence ---------------- */
+  /* ================= Lab 4: geofence ================= */
   (function geoLab() {
-    const svg = $('geo-map'); if (!svg) return;
-    const dot = $('geo-dot'), c1 = $('geo-dot-c'), c2 = $('geo-dot-i'), t = $('geo-dot-t');
-    const screen = $('geo-screen'), pipe = $('geo-pipe'), help = $('geo-help');
-    const CX = 200, CY = 150, R = 95;
+    const svg = $('geo-map'), dot = $('geo-dot'), halo = $('geo-halo'), carEl = $('geo-car'), name = $('geo-name');
+    const screen = $('geo-screen'), pipe = $('geo-pipe'), help = $('geo-help'), status = $('geo-status');
+    const CX = 200, CY = 150, R = 95, GREEN = '#30E07A', RED = '#FF2B1F';
     const g = S.geofence({ cx: CX, cy: CY, r: R, cooldownMs: 300000 });
-    let x = 180, y = 140, simNow = 0, lastRealTs = performance.now(), dragging = false, animating = false;
+    let x = 180, y = 140, simNow = 0, lastReal = performance.now(), dragging = false, animating = false;
     g.move(x, y, 0);
-    const clockBase = 10 * 60 + 42;
-    function tick() {
-      // simulated time runs 60x so the 5-minute cooldown is reachable in a demo
-      const real = performance.now(); simNow += (real - lastRealTs) * 60; lastRealTs = real;
-      const mins = clockBase + Math.floor(simNow / 60000);
+    const base = 10 * 60 + 42;
+    setInterval(() => {
+      const now = performance.now(); simNow += (now - lastReal) * 60; lastReal = now; // demo time runs 60x
+      const mins = base + Math.floor(simNow / 60000);
       $('geo-clock').textContent = String(Math.floor(mins / 60) % 24).padStart(2, '0') + ':' + String(mins % 60).padStart(2, '0');
-    }
-    setInterval(tick, 1000);
-
+    }, 1000);
+    function paint(c) { halo.setAttribute('fill', c); carEl.setAttribute('fill', c); }
     function place(nx, ny) {
-      x = Math.max(12, Math.min(408, nx)); y = Math.max(26, Math.min(288, ny));
-      [c1, c2].forEach((c) => { c.setAttribute('cx', x); c.setAttribute('cy', y); });
-      t.setAttribute('x', x); t.setAttribute('y', y - 18);
+      x = M.clamp(nx, 12, 408); y = M.clamp(ny, 26, 288);
+      [halo, carEl].forEach((c) => { c.setAttribute('cx', x); c.setAttribute('cy', y); });
+      name.setAttribute('x', x); name.setAttribute('y', y - 20);
       const dist = Math.hypot(x - CX, y - CY);
       dot.setAttribute('aria-valuenow', Math.min(100, Math.round(dist / R * 50)));
       dot.setAttribute('aria-valuetext', (dist <= R ? 'inside' : 'outside') + ' the zone, ' + Math.round(dist / R * 300) + ' metres from centre');
       const res = g.move(x, y, simNow);
       if (res.transition === 'EXIT') fire(res.notify);
-      if (res.transition === 'ENTER') { c2.setAttribute('fill', '#2443B0'); c1.setAttribute('fill', '#2443B0'); clearPipe(); help.textContent = 'Back inside. Re-entry is a transition too, but the app only alerts on EXIT.'; }
+      if (res.transition === 'ENTER') { paint(GREEN); clearPipe(); status.textContent = 'Inside track limits'; status.className = 'lab-status'; help.textContent = 'Back inside. Re-entry is a transition too, but the app only alerts on EXIT.'; }
     }
-    function clearPipe() { pipe.querySelectorAll('li').forEach((li) => { li.className = ''; }); }
+    function clearPipe() { pipe.querySelectorAll('li').forEach((li) => { li.classList.remove('on', 'muted'); }); }
     async function fire(notify) {
-      c2.setAttribute('fill', '#B3261E'); c1.setAttribute('fill', '#B3261E');
+      paint(RED); status.textContent = 'Track limits exceeded'; status.className = 'lab-status bad';
       if (animating) return; animating = true; clearPipe();
-      const steps = ['os', 'worker', 'fs', 'fn', 'fcm'];
-      for (const s of steps) {
+      setFlag('yellow', 'TRACK LIMITS', 2500);
+      for (const s of ['os', 'worker', 'fs', 'fn', 'fcm']) {
         const li = pipe.querySelector('[data-step="' + s + '"]');
-        if (!notify && s === 'fn') { li.className = 'muted'; li.textContent = 'Cloud Function: exit within 5-min cooldown → logged in feed, no push'; animating = false; help.textContent = 'Recorded, not pushed. GPS jitter at the edge would otherwise spam the group. Wait a minute of demo time and try again.'; return; }
-        li.className = 'on';
-        await wait(420);
+        if (!notify && s === 'fn') {
+          li.classList.add('muted');
+          help.textContent = 'Recorded, not pushed: this exit is inside the 5-minute cooldown, so GPS jitter at the edge cannot spam the group. Wait a minute of demo time and try again.';
+          animating = false; return;
+        }
+        li.classList.add('on');
+        await wait(330);
       }
-      const n = document.createElement('div'); n.className = 'notif';
-      n.innerHTML = '<b>GeoGuard · now</b>Asha has left the safe zone.';
+      const n = el('div', 'notif'); n.appendChild(el('b', null, 'GeoGuard · now')); n.appendChild(document.createTextNode('Asha has left the safe zone.'));
       screen.appendChild(n);
       while (screen.children.length > 4) screen.removeChild(screen.children[1]);
       help.textContent = 'Delivered with the app closed. Drag her back in, then out again to see the cooldown.';
       animating = false;
     }
-    function pt(ev) {
-      const r = svg.getBoundingClientRect();
-      const p = ev.touches ? ev.touches[0] : ev;
-      return { x: (p.clientX - r.left) / r.width * 420, y: (p.clientY - r.top) / r.height * 300 };
+    function pt(ev) { const r = svg.getBoundingClientRect(); return { x: (ev.clientX - r.left) / r.width * 420, y: (ev.clientY - r.top) / r.height * 300 }; }
+    let pending = null;
+    function schedule(p) { // coalesce pointer moves to one update per frame
+      const first = !pending; pending = p;
+      if (first) requestAnimationFrame(() => { const q = pending; pending = null; place(q.x, q.y); });
     }
     dot.addEventListener('pointerdown', (e) => { dragging = true; dot.setPointerCapture(e.pointerId); e.preventDefault(); });
-    dot.addEventListener('pointermove', (e) => { if (!dragging) return; const p = pt(e); place(p.x, p.y); });
+    dot.addEventListener('pointermove', (e) => { if (dragging) schedule(pt(e)); });
     dot.addEventListener('pointerup', () => { dragging = false; });
     dot.addEventListener('pointercancel', () => { dragging = false; });
-    svg.addEventListener('pointerdown', (e) => { if (e.target === dot || dot.contains(e.target)) return; const p = pt(e); place(p.x, p.y); });
+    svg.addEventListener('pointerdown', (e) => { if (dot.contains(e.target)) return; const p = pt(e); place(p.x, p.y); });
     dot.addEventListener('keydown', (e) => {
       const k = { ArrowLeft: [-12, 0], ArrowRight: [12, 0], ArrowUp: [0, -12], ArrowDown: [0, 12] }[e.key];
       if (!k) return; e.preventDefault(); place(x + k[0], y + k[1]);
     });
   })();
 
-  /* ---------------- copy email ---------------- */
+  /* ================= copy email ================= */
   (function copy() {
-    const b = $('copy-mail'), out = $('copied'); if (!b) return;
+    const b = $('copy-mail'), out = $('copied');
     b.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText('sonawanedarshan35@gmail.com'); out.textContent = 'Copied'; }
+      try { await navigator.clipboard.writeText('sonawanedarshan35@gmail.com'); out.textContent = 'Copied. Box, box.'; }
       catch (e) { out.textContent = 'Select and copy the address above'; }
-      setTimeout(() => { out.textContent = ''; }, 2500);
+      setTimeout(() => { out.textContent = ''; }, 2600);
     });
   })();
-})();
 
+  /* ================= reaction test ================= */
+  (function reaction() {
+    const pad = $('react-pad'), pods = $('react-gantry').querySelectorAll('.pod'), out = $('react-out'), bestEl = $('react-best'), start = $('react-start'), help = $('react-help');
+    let state = 'idle', timers = [], outAt = 0, best = parseInt(store.get('react-best') || '0', 10) || 0;
+    if (best) bestEl.textContent = 'Session best ' + M.formatReaction(best);
+    function clear() { timers.forEach(clearTimeout); timers = []; pods.forEach((p) => p.classList.remove('on')); }
+    function go() {
+      if (state === 'arming' || state === 'go') return;
+      clear(); state = 'arming'; out.className = 'react-out'; out.textContent = 'Wait…'; start.disabled = true;
+      const s = M.lightsSchedule({ lights: 5, stepMs: 650, minHoldMs: 300, maxHoldMs: 2600, rand: Math.random });
+      s.onAt.forEach((t, i) => timers.push(setTimeout(() => pods[i].classList.add('on'), t)));
+      timers.push(setTimeout(() => { pods.forEach((p) => p.classList.remove('on')); outAt = performance.now(); state = 'go'; out.textContent = 'GO'; }, s.outAt));
+      pad.focus({ preventScroll: true });
+    }
+    function hit() {
+      if (state === 'arming') {
+        clear(); state = 'idle'; start.disabled = false;
+        out.className = 'react-out jump'; out.textContent = 'Jump start';
+        help.textContent = 'Drive-through penalty. Press start and wait for all five lights to go out.';
+        return;
+      }
+      if (state !== 'go') return;
+      const r = M.judgeReaction(performance.now(), outAt);
+      state = 'idle'; start.disabled = false;
+      out.textContent = M.formatReaction(r.ms);
+      out.className = 'react-out' + (r.ms < 250 ? ' good' : '');
+      help.textContent = r.ms < 200 ? 'Pole-position reflexes. Hire the driver.' : r.ms < 300 ? 'Clean launch. Try again for purple.' : 'Bogged down off the line. Again?';
+      if (!best || r.ms < best) { best = r.ms; store.set('react-best', String(best)); bestEl.textContent = 'Session best ' + M.formatReaction(best); }
+    }
+    start.addEventListener('click', go);
+    pad.addEventListener('pointerdown', (e) => { e.preventDefault(); if (state === 'idle') go(); else hit(); });
+    pad.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (state === 'idle') go(); else hit(); } });
+  })();
+})();
 </script>
 </body>
 </html>

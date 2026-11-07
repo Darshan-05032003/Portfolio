@@ -3,383 +3,348 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Darshan Sonawane — backend & Android engineer</title>
-<meta name="description" content="Darshan Sonawane builds backends that stay correct under load and Android apps that work when the app is closed. Try the systems live: oversell race, idempotent payments, a double-entry ledger, a geofence.">
+<!--CSP-->
+<title>Darshan Sonawane — backend &amp; Android engineer</title>
+<meta name="description" content="Darshan Sonawane builds backends that stay correct under load and Android apps that work with the app closed. Race-control labs you can break live: oversell race, idempotent payments, a double-entry ledger, a geofence.">
 <meta property="og:title" content="Darshan Sonawane — backend & Android engineer">
-<meta property="og:description" content="Try the systems, don't just read about them. 20 buyers vs 5 units, retried payments, an append-only ledger, a geofence that fires with the app closed.">
-<meta name="theme-color" content="#E7EEE2">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23E7EEE2'/%3E%3Cpath d='M0 12h64M0 24h64M0 36h64M0 48h64' stroke='%23BFD0C8' stroke-width='1'/%3E%3Cpath d='M14 0v64' stroke='%23D0786F' stroke-width='2'/%3E%3Ctext x='38' y='46' font-family='Georgia,serif' font-weight='700' font-size='40' text-anchor='middle' fill='%2315213B'%3ED%3C/text%3E%3C/svg%3E">
+<meta property="og:description" content="Lights out. Twenty buyers for five units, a payment retried twice, a ledger you can't edit, a geofence that fires with the app closed. Try to break them.">
+<meta name="theme-color" content="#0A0B0E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230A0B0E'/%3E%3Cpath d='M14 46 L26 18 H48 L44 27 H32 L30 32 H42 L38 41 H26 L24 46 Z' fill='%23FF2B1F'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;0,6..96,800;1,6..96,500&family=Schibsted+Grotesk:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,600;1,700;1,800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="wrap top">
-  <div class="row">
-    <div class="margin">2026</div>
-    <div class="body">
-      <a class="mark" href="#top">D. Sonawane</a>
-      <nav class="nav" aria-label="Sections">
-        <a href="#labs">Labs</a>
-        <a href="#work">Work</a>
-        <a href="#about">About</a>
-        <a href="#hire">Hire</a>
-      </nav>
-    </div>
+<!-- ===================== START LIGHTS ===================== -->
+<div class="lights" id="lights" aria-hidden="true" hidden>
+  <div class="gantry" id="gantry">
+    <div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div>
   </div>
+  <p class="lights-msg" id="lights-msg">Tap the moment the lights go out</p>
+  <button class="lights-skip" id="lights-skip" type="button">Skip intro ›</button>
+</div>
+
+<!-- ===================== HEADER ===================== -->
+<header class="banner" id="banner">
+  <a class="mark" href="#top" aria-label="Darshan Sonawane, back to top"><span class="mark-slash"></span>D<span class="dot">·</span>SONAWANE</a>
+  <div class="flag" aria-hidden="true"><span class="flag-dot"></span><span id="flag-text">GREEN FLAG</span></div>
+  <div class="trackmap" id="trackmap" aria-hidden="true">
+  <svg viewBox="0 0 200 120">
+    <path id="track" d="M30 92 C 14 92, 10 70, 24 62 L 62 40 C 74 33, 80 22, 96 20 L 150 18 C 172 17, 188 30, 184 48 C 181 62, 166 64, 158 72 C 150 80, 160 96, 142 100 L 44 100 C 38 100, 34 96, 30 92 Z" />
+    <path id="track-done" d="M30 92 C 14 92, 10 70, 24 62 L 62 40 C 74 33, 80 22, 96 20 L 150 18 C 172 17, 188 30, 184 48 C 181 62, 166 64, 158 72 C 150 80, 160 96, 142 100 L 44 100 C 38 100, 34 96, 30 92 Z" pathLength="1000"/>
+    <rect x="26" y="84" width="4" height="16" fill="#F2F3F5"/>
+    <circle id="car" r="9"/>
+  </svg>
+  <div class="tm-row"><span id="tm-sector">S1</span><span id="tm-name">Start</span><span class="tm-lap" id="tm-lap">0:00.000</span></div>
+</div>
+  <nav class="nav" aria-label="Sections">
+    <a href="#grid">Grid</a>
+    <a href="#control">Race control</a>
+    <a href="#pace">Pace</a>
+    <a href="#pitwall" class="nav-cta">Pit wall</a>
+  </nav>
 </header>
 
-<main id="main" class="wrap">
+<main id="main">
 
-<!-- ================= HERO ================= -->
+<!-- ===================== HERO ===================== -->
 <section class="hero" id="top">
-  <div class="row">
-    <div class="margin">Backend ·<br>Android</div>
-    <div class="body">
-      <h1 class="name"><span>Darshan</span><span class="carry">Sonawane</span></h1>
-      <div class="hero-grid">
-        <div>
-          <p class="lede">I build backends that stay correct when twenty people click at once, and Android apps that keep working after you close them.</p>
-          <p class="sub">Java · Spring Boot · PostgreSQL · Kafka · Kotlin · Jetpack Compose. Every repo ships with tests that run on every push, a README anyone can run, and CI that fails below a coverage gate. Open to freelance and full-time backend and Android work.</p>
-          <div class="ctas">
-            <a class="btn" href="#labs">Try the systems</a>
-            <a class="btn ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener">GitHub<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 0 0-2.5 15.6c.4.1.5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.3 1.9.9 2.4.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.6 7.6 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.7-3.6 3.9.3.3.5.8.5 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 0Z"/></svg></a>
-          </div>
-        </div>
-
-        <!-- LAB 1: oversell race -->
-        <div class="lab" id="lab-race" aria-labelledby="race-h">
-          <h2 id="race-h">Twenty buyers, five units.</h2>
-          <p class="q">Same second, same product. How many orders does the shop accept?</p>
-          <fieldset class="choice" id="race-mode">
-            <legend>Stock update strategy</legend>
-            <label><input type="radio" name="race-mode" value="naive" checked><span>Read stock, then write</span></label>
-            <label><input type="radio" name="race-mode" value="safe"><span>Conditional UPDATE</span></label>
-          </fieldset>
-          <div class="race-top">
-            <ol class="buyers" id="buyers" aria-label="Buyers"></ol>
-            <dl class="tally">
-              <dd id="race-orders">0</dd><dd id="race-stock">5</dd>
-              <dt>orders</dt><dt>stock left</dt>
-            </dl>
-          </div>
-          <pre class="sqllog" id="race-log" aria-live="polite" aria-label="SQL log"></pre>
-          <p class="verdict" id="race-verdict" aria-live="polite"></p>
-          <div class="lab-actions">
-            <button class="btn" id="race-run" type="button">Run the sale</button>
-            <small>From <a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener">ecommerce-backend</a>, where this is an integration test that must pass on every commit.</small>
-          </div>
-        </div>
+  <canvas class="streaks" id="streaks" aria-hidden="true"></canvas>
+  <div class="hero-in">
+    <div class="hero-text">
+      <p class="eyebrow"><span class="num">05</span> Backend &amp; Android engineer</p>
+      <h1 class="title">
+        <span class="line"><span class="word">Darshan</span></span>
+        <span class="line"><span class="word outline">Sonawane</span></span>
+      </h1>
+      <p class="lede">I build backends that stay correct when twenty people click at once, and Android apps that keep working after you close them.</p>
+      <div class="ctas">
+        <a class="btn btn-red" href="#control"><span>Enter race control</span></a>
+        <a class="btn btn-ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener noreferrer"><span>GitHub</span></a>
       </div>
     </div>
+
+    <div class="cockpit" aria-label="Scroll speed telemetry">
+      <div class="shift" id="shift" aria-hidden="true"></div>
+      <svg class="gauge" viewBox="0 0 240 150" aria-hidden="true">
+        <path class="gauge-track" d="M20 130 A100 100 0 0 1 220 130" pathLength="100"/>
+        <path class="gauge-fill" id="gauge-fill" d="M20 130 A100 100 0 0 1 220 130" pathLength="100"/>
+        <g class="ticks" id="ticks"></g>
+      </svg>
+      <div class="readout">
+        <div><b id="kmh">0</b><span>km/h</span></div>
+        <div class="gear"><b id="gear">1</b><span>gear</span></div>
+      </div>
+      <p class="cockpit-hint" id="cockpit-hint">Scroll to accelerate</p>
+    </div>
+  </div>
+
+  <!-- live timing strip -->
+  <div class="timing" id="timing" role="list" aria-label="Headline figures">
+    <div class="cell" role="listitem" data-reveal><span class="lbl">Tests across repos</span><b data-count="3100" data-suffix="+">0</b><i class="secbar purple"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.06s"><span class="lbl">Oversold units</span><b data-count="0">0</b><i class="secbar green"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.12s"><span class="lbl">Double charges</span><b data-count="0">0</b><i class="secbar green"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.18s"><span class="lbl">Unbalanced journals</span><b data-count="0">0</b><i class="secbar green"></i></div>
+    <div class="cell" role="listitem" data-reveal style="--d:.24s"><span class="lbl">Best line coverage</span><b data-count="99.3" data-dec="1" data-suffix="%">0</b><i class="secbar purple"></i></div>
   </div>
 </section>
 
-<!-- ================= LABS ================= -->
-<section id="labs">
-  <div class="row">
-    <div class="margin">Labs<br>1–4</div>
-    <div class="body">
-      <h2 class="sec-title">The failure modes I design against, running in your browser.</h2>
-      <p class="sec-intro">Each panel is a small working model of a real problem from my projects. Break it, then switch on the fix. The same logic that drives these panels is covered by unit tests in the portfolio's own repo.</p>
+<div class="kerb" aria-hidden="true"></div>
 
-      <div class="labs">
-        <!-- LAB 2: idempotent payments -->
-        <div class="lab" id="lab-pay" aria-labelledby="pay-h">
-          <h3 id="pay-h">Pay ₹499, lose the response twice.</h3>
-          <p class="q">Your 4G drops after the server charges you but before you see "Paid". The app retries. Then retries again.</p>
-          <label class="switch"><input type="checkbox" id="pay-key"><span class="track" aria-hidden="true"></span><span>Send an <code>Idempotency-Key</code> header</span></label>
-          <div class="lab-actions" style="margin-top:0">
-            <button class="btn" id="pay-run" type="button">Pay ₹499</button>
-          </div>
-          <ol class="wire" id="pay-wire" aria-live="polite" aria-label="Requests on the wire"></ol>
-          <div class="stmt" id="pay-stmt" aria-live="polite"></div>
-          <p class="verdict" id="pay-verdict"></p>
-        </div>
-
-        <!-- LAB 3: ledger -->
-        <div class="lab" id="lab-ledger" aria-labelledby="ledger-h">
-          <h3 id="ledger-h">Money is never a number you overwrite.</h3>
-          <p class="q">A double-entry, append-only ledger. Try to edit a row. Try to approve your own big transfer.</p>
-          <div class="accts" id="accts"></div>
-          <div class="pending" id="pending"></div>
-          <div class="ops">
-            <button class="btn ghost" type="button" data-op="t1">Asha → Ravi ₹1,500</button>
-            <button class="btn ghost" type="button" data-op="t2">Ravi → Asha ₹3,000</button>
-            <button class="btn ghost" type="button" data-op="big">Asha → Ravi ₹6,000</button>
-            <button class="btn ghost" type="button" data-op="bad">Post unbalanced journal</button>
-            <button class="btn ghost" type="button" data-op="reset">Reset</button>
-          </div>
-          <div class="journal-scroll">
-            <table class="journal" aria-label="Ledger entries">
-              <thead><tr><th>Journal</th><th>Account</th><th class="num">Debit</th><th class="num">Credit</th><th class="act"></th></tr></thead>
-              <tbody id="journal"></tbody>
-              <tfoot><tr><td colspan="2">Trial balance</td><td class="num" id="tb-d"></td><td class="num" id="tb-c"></td><td class="act" id="tb-stamp"></td></tr></tfoot>
-            </table>
-          </div>
-          <div id="ledger-notice"></div>
-        </div>
-      </div>
-    </div>
+<!-- ===================== GRID (timing tower) ===================== -->
+<section class="sec" id="grid">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">01 / The grid</p>
+    <h2>Nine repos. Each built around one guarantee.</h2>
+    <p class="sec-intro">Ranked like a timing tower. Tap a row to open its design decisions; every figure is copied from the repository's own README.</p>
   </div>
+  <div class="tower" id="tower" role="list"></div>
 </section>
 
-<!-- ================= WORK ================= -->
-<section id="work">
-  <div class="row">
-    <div class="margin">Work</div>
-    <div class="body">
-      <h2 class="sec-title">Three systems, each built around one hard guarantee.</h2>
-      <p class="sec-intro">Not tutorials. Each one started from a question I could not answer with a CRUD app, and each one is covered by tests that run on every push.</p>
-    </div>
+<div class="kerb" aria-hidden="true"></div>
+
+<!-- ===================== RACE CONTROL (labs) ===================== -->
+<section class="sec" id="control">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">02 / Race control</p>
+    <h2>Four incidents. Try to cause them.</h2>
+    <p class="sec-intro">Each panel is a working model of a real failure from my projects. Break it, then switch on the fix. The logic behind these panels is covered by unit tests in this site's repo.</p>
   </div>
 
-  <article class="entry row">
-    <div class="margin">Java 21<br>Spring Boot 4<br>PostgreSQL<br>Kafka</div>
-    <div class="body">
-      <div class="entry-grid">
-        <div>
-          <h3><a href="https://github.com/Darshan-05032003/core-banking-ledger" target="_blank" rel="noopener">core-banking-ledger<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 12 12 4M6 4h6v6"/></svg></a></h3>
-          <p class="what">A core banking backend where every rupee movement is a balanced journal in an append-only ledger, corrected only by reversal, and published to Kafka through a transactional outbox so downstream systems see every posting exactly once and in order.</p>
-          <ul class="decisions">
-            <li><b>Lock ordering instead of SERIALIZABLE.</b> A transfer locks both balance rows in ascending account-id order under READ COMMITTED with a lock timeout. Opposite transfers queue instead of deadlocking, and nothing waits forever.</li>
-            <li><b>Idempotency decided by the database.</b> The key is claimed by a unique insert in its own short transaction, so two concurrent retries are settled by a constraint, not by application code.</li>
-            <li><b>Maker-checker with holds.</b> Above a threshold the raiser cannot post. Available balance drops, ledger balance does not, and a different CHECKER role decides. Undecided transfers expire by a ShedLock-guarded sweep.</li>
-            <li><b>Append-only enforced in Postgres.</b> Triggers reject UPDATE, DELETE and TRUNCATE on journal, ledger and audit tables. A nightly job recomputes every balance from the lines and reports any drift as a metric and an audit row.</li>
-          </ul>
-          <p class="stack"><b>Also:</b> keyset pagination for statements, daily interest accrual with HALF_EVEN month-end payout, RFC 9457 problem responses, OpenAPI 3.1, Prometheus metrics, ECS JSON logs, Testcontainers, ArchUnit, multi-stage Docker, GitHub Actions.</p>
+  <div class="labs">
+    <!-- LAB 1 -->
+    <article class="lab" id="lab-race" aria-labelledby="race-h" data-reveal>
+      <header class="lab-bar"><span class="chip red">Incident 01</span><span class="lab-status" id="race-status">Ready</span></header>
+      <h3 id="race-h">20 buyers. 5 units. One second.</h3>
+      <p class="q">Same product, same moment. How many orders does the shop accept?</p>
+      <fieldset class="seg" id="race-mode">
+        <legend class="sr">Stock update strategy</legend>
+        <label><input type="radio" name="race-mode" value="naive" checked><span>Read, then write</span></label>
+        <label><input type="radio" name="race-mode" value="safe"><span>Conditional UPDATE</span></label>
+      </fieldset>
+      <div class="race-wrap">
+        <div class="stage" id="race-stage" aria-label="Buyers racing for five units">
+          <span class="zone-lbl" id="z-grid">Grid</span><span class="zone-lbl" id="z-box">Units</span><span class="zone-lbl red" id="z-over">Oversold</span>
         </div>
-        <dl class="figures">
-          <div><dt>Tests</dt><dd>711</dd></div>
-          <div><dt>Line coverage</dt><dd>98.5%</dd></div>
-          <div><dt>Branch coverage</dt><dd>86.3%</dd></div>
-          <div><dt>Flyway migrations</dt><dd>15</dd></div>
-          <div><dt>Deadlocks under opposite transfers</dt><dd>0</dd></div>
+        <dl class="tally">
+          <div><dt>Orders</dt><dd id="race-orders">0</dd></div>
+          <div><dt>Stock</dt><dd id="race-stock">5</dd></div>
         </dl>
       </div>
-    </div>
-  </article>
-
-  <article class="entry row">
-    <div class="margin">Java 21<br>Spring Boot 4<br>MySQL<br>Redis</div>
-    <div class="body">
-      <div class="entry-grid">
-        <div>
-          <h3><a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener">ecommerce-backend<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 12 12 4M6 4h6v6"/></svg></a></h3>
-          <p class="what">A shop API built around the parts that break under real traffic: stock that cannot be oversold, orders that can be retried safely, refresh tokens that rotate, and emails that only go out after the database commits.</p>
-          <ul class="decisions">
-            <li><b>One conditional UPDATE per line.</b> <code>stock = stock − ? WHERE stock ≥ ?</code>, lines reserved in product-id order. A test fires 20 concurrent buyers at the last 5 units and expects exactly 5 orders. That test is Lab 1 above.</li>
-            <li><b>Idempotent order placement.</b> Key, user, SHA-256 of the body and the response are stored in the order transaction. Replay returns the stored response; same key with a different body is 422. That is Lab 2.</li>
-            <li><b>Refresh-token families.</b> 256-bit opaque tokens stored as hashes, rotated on every use. Replaying a used token revokes the whole family.</li>
-            <li><b>Side effects after commit.</b> Notifications run on <code>@TransactionalEventListener(AFTER_COMMIT)</code> with the correlation id copied to the worker thread. A rolled-back order never sends an email.</li>
-          </ul>
-          <p class="stack"><b>Also:</b> order state machine with audit history, Strategy-pattern payment processors recorded with REQUIRES_NEW, Redis cache evicted after commit, Bucket4j login limits, statement-count tests against N+1.</p>
-        </div>
-        <dl class="figures">
-          <div><dt>Tests</dt><dd>600</dd></div>
-          <div><dt>Line coverage</dt><dd>99.3%</dd></div>
-          <div><dt>Branch coverage</dt><dd>95.0%</dd></div>
-          <div><dt>Oversold units in 20-vs-5 test</dt><dd>0</dd></div>
-          <div><dt>Test sleeps</dt><dd>0</dd></div>
-        </dl>
+      <ol class="ticker" id="race-log" aria-live="polite" aria-label="Race control messages"></ol>
+      <p class="verdict" id="race-verdict" aria-live="polite"></p>
+      <div class="lab-actions">
+        <button class="btn btn-red" id="race-run" type="button"><span>Lights out</span></button>
+        <small>From <a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener noreferrer">ecommerce-backend</a>, where this is an integration test on every commit.</small>
       </div>
-    </div>
-  </article>
+    </article>
 
-  <article class="entry row">
-    <div class="margin">Kotlin<br>Jetpack Compose<br>Firebase<br>Geofencing API</div>
-    <div class="body">
-      <div class="entry-grid">
-        <div>
-          <h3><a href="https://github.com/Darshan-05032003/GeoGuard" target="_blank" rel="noopener">GeoGuard<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 12 12 4M6 4h6v6"/></svg></a></h3>
-          <p class="what">A group creates a safe zone. When any member leaves it, everyone else gets a push, even with the app killed. Built as a take-home assignment for an Android role, with a signed APK in the releases you can install on two phones and try.</p>
-          <ul class="decisions">
-            <li><b>OS geofencing instead of polling GPS.</b> Battery-safe and works in the background with no foreground notification. Trade-off accepted: 1–2 minute latency and a 150 m minimum radius.</li>
-            <li><b>Exit events survive bad networks.</b> BroadcastReceiver → WorkManager → Firestore, with retries. Deterministic event ids (<code>uid_EXIT_time</code>) mean a retry can never create a duplicate alert.</li>
-            <li><b>Fan-out on the server.</b> A Cloud Function sends FCM to every other member, so no secrets ship in the APK and receivers get alerts with the app closed.</li>
-            <li><b>Jitter cooldown and reboot resync.</b> One alert per member per group per 5 minutes; geofences are re-registered after reboot.</li>
-          </ul>
-          <p class="stack"><b>Security rules:</b> only members read a group, users can only add themselves and only report their own exits, push tokens are private, groups cannot be listed.</p>
-        </div>
-        <dl class="figures">
-          <div><dt>Alert latency</dt><dd>≤ 2 min</dd></div>
-          <div><dt>Min reliable radius</dt><dd>150 m</dd></div>
-          <div><dt>Secrets in the APK</dt><dd>0</dd></div>
-          <div><dt>Duplicate alerts on retry</dt><dd>0</dd></div>
-        </dl>
+    <!-- LAB 2 -->
+    <article class="lab" id="lab-pay" aria-labelledby="pay-h" data-reveal style="--d:.08s">
+      <header class="lab-bar"><span class="chip yellow">Incident 02</span><span class="lab-status" id="pay-status">Ready</span></header>
+      <h3 id="pay-h">Pay ₹499. Lose the radio twice.</h3>
+      <p class="q">The server charges you, then your 4G drops before "Paid" arrives. The app retries. Twice.</p>
+      <label class="switch"><input type="checkbox" id="pay-key"><span class="track" aria-hidden="true"></span><span>Send an <code>Idempotency-Key</code></span></label>
+      <div class="lane" id="pay-lane" aria-hidden="true">
+        <div class="node"><b>APP</b><span>₹499</span></div>
+        <div class="road" id="pay-road"></div>
+        <div class="node"><b>PSP</b><span id="pay-charges">0 charges</span></div>
       </div>
+      <ol class="wire" id="pay-wire" aria-live="polite" aria-label="Requests on the wire"></ol>
+      <div class="stmt" id="pay-stmt" aria-live="polite"></div>
+      <p class="verdict" id="pay-verdict"></p>
+      <div class="lab-actions">
+        <button class="btn btn-red" id="pay-run" type="button"><span>Pay ₹499</span></button>
+        <small>From <a href="https://github.com/Darshan-05032003/ecommerce-backend" target="_blank" rel="noopener noreferrer">ecommerce-backend</a> and <a href="https://github.com/Darshan-05032003/PayFlow" target="_blank" rel="noopener noreferrer">PayFlow</a>.</small>
+      </div>
+    </article>
 
-      <!-- LAB 4: geofence -->
-      <div class="lab geo" id="lab-geo" aria-labelledby="geo-h">
+    <!-- LAB 3 -->
+    <article class="lab lab-wide" id="lab-ledger" aria-labelledby="ledger-h" data-reveal>
+      <header class="lab-bar"><span class="chip purple">Incident 03</span><span class="lab-status" id="ledger-status">Books open</span></header>
+      <h3 id="ledger-h">The stewards' ledger can't be edited.</h3>
+      <p class="q">Double-entry and append-only. Try to edit a row. Try to approve your own big transfer. Try to post a journal that doesn't balance.</p>
+      <div class="accts" id="accts"></div>
+      <div class="pending" id="pending"></div>
+      <div class="ops">
+        <button class="btn btn-ghost sm" type="button" data-op="t1"><span>Asha → Ravi ₹1,500</span></button>
+        <button class="btn btn-ghost sm" type="button" data-op="t2"><span>Ravi → Asha ₹3,000</span></button>
+        <button class="btn btn-ghost sm" type="button" data-op="big"><span>Asha → Ravi ₹6,000</span></button>
+        <button class="btn btn-ghost sm danger" type="button" data-op="bad"><span>Post unbalanced journal</span></button>
+        <button class="btn btn-ghost sm" type="button" data-op="reset"><span>Reset</span></button>
+      </div>
+      <div class="journal-scroll">
+        <table class="journal" aria-label="Ledger entries">
+          <thead><tr><th>Journal</th><th>Account</th><th class="num">Debit</th><th class="num">Credit</th><th class="act"><span class="sr">Actions</span></th></tr></thead>
+          <tbody id="journal"></tbody>
+          <tfoot><tr><td colspan="2">Trial balance</td><td class="num" id="tb-d"></td><td class="num" id="tb-c"></td><td class="act" id="tb-stamp"></td></tr></tfoot>
+        </table>
+      </div>
+      <div id="ledger-notice" aria-live="polite"></div>
+      <div class="lab-actions"><small>From <a href="https://github.com/Darshan-05032003/core-banking-ledger" target="_blank" rel="noopener noreferrer">core-banking-ledger</a>, where Postgres triggers reject UPDATE and DELETE on the ledger.</small></div>
+    </article>
+
+    <!-- LAB 4 -->
+    <article class="lab lab-wide" id="lab-geo" aria-labelledby="geo-h" data-reveal>
+      <header class="lab-bar"><span class="chip green">Incident 04</span><span class="lab-status" id="geo-status">Inside track limits</span></header>
+      <h3 id="geo-h">Drag Asha past track limits.</h3>
+      <p class="q">Her phone is in her pocket, app closed. Watch what reaches Ravi, and what the 5-minute cooldown swallows.</p>
+      <div class="geo">
         <div>
-          <h3 id="geo-h">Drag Asha out of the zone.</h3>
-          <p class="q">Her phone is in her pocket, app closed. Watch what reaches Ravi's phone, and what the 5-minute cooldown swallows.</p>
-          <svg class="map" id="geo-map" viewBox="0 0 420 300" role="img" aria-label="Map with a circular safe zone; drag the marker to move Asha">
+          <svg class="map" id="geo-map" viewBox="0 0 420 300" role="img" aria-label="Map with a circular safe zone; drag the marker or use arrow keys to move Asha">
             <defs>
-              <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0v30" fill="none" stroke="#BFD0C8" stroke-width="1"/></pattern>
+              <pattern id="g-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0v30" fill="none" stroke="#1E212B" stroke-width="1"/></pattern>
+              <pattern id="g-kerb" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="12" fill="#FF2B1F"/><rect x="6" width="6" height="12" fill="#F2F3F5"/></pattern>
             </defs>
-            <rect width="420" height="300" fill="url(#grid)"/>
-            <path d="M0 210 C 80 190, 140 240, 220 215 S 360 170, 420 190" fill="none" stroke="#C7D5CC" stroke-width="14" stroke-linecap="round"/>
-            <path d="M150 0 C 160 80, 120 140, 160 300" fill="none" stroke="#C7D5CC" stroke-width="10" stroke-linecap="round"/>
-            <circle id="geo-zone" cx="200" cy="150" r="95" fill="rgba(36,67,176,0.10)" stroke="#2443B0" stroke-width="2" stroke-dasharray="6 5"/>
-            <text x="200" y="68" text-anchor="middle" font-size="12" fill="#2443B0" font-family="inherit">Safe zone · 300 m</text>
-            <g id="geo-ravi"><circle cx="230" cy="170" r="9" fill="#15213B"/><text x="245" y="174" font-size="12" fill="#15213B">Ravi</text></g>
+            <rect width="420" height="300" fill="#0E0F14"/>
+            <rect width="420" height="300" fill="url(#g-grid)"/>
+            <path d="M-10 222 C 70 196, 140 252, 230 222 S 360 168, 430 196" fill="none" stroke="#1B1D26" stroke-width="26"/>
+            <path d="M-10 222 C 70 196, 140 252, 230 222 S 360 168, 430 196" fill="none" stroke="#2A2D39" stroke-width="2" stroke-dasharray="10 10"/>
+            <circle cx="200" cy="150" r="99" fill="none" stroke="url(#g-kerb)" stroke-width="6"/>
+            <circle id="geo-zone" cx="200" cy="150" r="95" fill="rgba(48,224,122,.07)"/>
+            <text x="200" y="40" text-anchor="middle" class="map-lbl">TRACK LIMITS · 300 m</text>
+            <g><circle cx="232" cy="172" r="8" fill="#F2F3F5"/><text x="246" y="176" class="map-name">Ravi</text></g>
             <g class="dot" id="geo-dot" tabindex="0" role="slider" aria-label="Asha's position. Use arrow keys to move." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="inside the zone">
-              <circle id="geo-dot-c" cx="180" cy="140" r="16" fill="#2443B0" opacity="0.25"/>
-              <circle id="geo-dot-i" cx="180" cy="140" r="9" fill="#2443B0" stroke="#F1F5EE" stroke-width="2"/>
-              <text id="geo-dot-t" x="180" y="122" text-anchor="middle" font-size="12" font-weight="700" fill="#15213B">Asha</text>
+              <circle id="geo-halo" cx="180" cy="140" r="18" fill="#30E07A" opacity=".22"/>
+              <circle id="geo-car" cx="180" cy="140" r="9" fill="#30E07A" stroke="#0A0B0E" stroke-width="2"/>
+              <text id="geo-name" x="180" y="120" text-anchor="middle" class="map-name b">Asha</text>
             </g>
           </svg>
           <ol class="pipeline" id="geo-pipe">
-            <li data-step="os">Android Geofencing API: EXIT transition</li>
-            <li data-step="worker">BroadcastReceiver → WorkManager (retries offline)</li>
-            <li data-step="fs">Firestore: events/asha_EXIT_&lt;time&gt; (deterministic id)</li>
-            <li data-step="fn">Cloud Function: fan out to other members</li>
-            <li data-step="fcm">FCM push → Ravi's phone</li>
+            <li data-step="os"><span>S1</span>Android Geofencing API: EXIT</li>
+            <li data-step="worker"><span>S2</span>BroadcastReceiver → WorkManager (retries offline)</li>
+            <li data-step="fs"><span>S3</span>Firestore: events/asha_EXIT_&lt;time&gt; (deterministic id)</li>
+            <li data-step="fn"><span>S4</span>Cloud Function: fan out to other members</li>
+            <li data-step="fcm"><span>S5</span>FCM push → Ravi's phone</li>
           </ol>
           <p class="geo-help" id="geo-help">Keyboard: focus the marker and use the arrow keys.</p>
         </div>
         <div class="phone" aria-label="Ravi's phone">
-          <div class="screen" id="geo-screen" aria-live="polite">
-            <div class="clock" id="geo-clock">10:42</div>
-          </div>
+          <div class="screen" id="geo-screen" aria-live="polite"><div class="clock" id="geo-clock">10:42</div></div>
         </div>
       </div>
-    </div>
-  </article>
+      <div class="lab-actions"><small>From <a href="https://github.com/Darshan-05032003/GeoGuard" target="_blank" rel="noopener noreferrer">GeoGuard</a>: OS geofencing, WorkManager, Firestore, Cloud Functions, FCM.</small></div>
+    </article>
+  </div>
 </section>
 
-<!-- ================= MORE ================= -->
-<section id="more">
-  <div class="row">
-    <div class="margin">More<br>entries</div>
-    <div class="body">
-      <h2 class="sec-title">Six more, each with one number I can defend.</h2>
-      <p class="sec-intro">Same rule as above: a guarantee, a test that would catch its failure, a README that lets you run it. Every figure here is copied from the repository's own README.</p>
-      <table class="more" aria-label="More repositories">
-        <thead><tr><th>Repository</th><th>What it guarantees</th><th class="num">Figure</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/CheckoutKit" target="_blank" rel="noopener">CheckoutKit</a><small>Kotlin Multiplatform · Compose · JitPack</small></td>
-            <td>A drop-in Android payment SDK. A pure payment state machine with all 49 state/event pairs tested, idempotent retries with backoff and jitter, and a reconciliation step so a timeout is never reported as "failed" while the money may have been captured.</td>
-            <td class="num"><b>97.5%</b><small>core line coverage</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/PayFlow" target="_blank" rel="noopener">PayFlow</a><small>Kotlin · Compose · Room · ML Kit</small></td>
-            <td>A UPI payments app with a state machine that cannot enter an illegal state, idempotency keys stored before the PSP call, QR scan-to-pay, AutoPay mandates, Keystore AES-GCM, biometric lock and root detection.</td>
-            <td class="num"><b>1,000</b><small>concurrent payments, zero duplicates</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/transaction-reconciliation-batch" target="_blank" rel="noopener">transaction-reconciliation-batch</a><small>Java 21 · Spring Batch · PostgreSQL</small></td>
-            <td>Nightly reconciliation of counterparty bank statements against the ledger: million-line files loaded exactly once, matched set-wise, every break classified, resolved under maker/approver control, restartable after a mid-run failure without duplicating work.</td>
-            <td class="num"><b>309</b><small>tests · 97.0% line coverage</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/SplitSmart" target="_blank" rel="noopener">SplitSmart</a><small>Kotlin · Compose · Hilt · Gemini</small></td>
-            <td>Photograph a receipt, on-device OCR plus an LLM turns it into line items, split paise-exactly with proportional tax and tip, settle with one-tap UPI links. Offline-first; a regex fallback when the model is unreachable.</td>
-            <td class="num"><b>95.2%</b><small>domain + data coverage</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/Fin_Pay" target="_blank" rel="noopener">FinPay</a><small>Flutter · sqflite</small></td>
-            <td>A fintech UI built test-first: exact-paise ledger, salted credential hashing, idempotent payment flow, physics-based motion, and a stress suite that pushes 100,000 ledger rows and 1,000-tap storms through the real screens.</td>
-            <td class="num"><b>1,500+</b><small>tests · 144 golden baselines</small></td>
-          </tr>
-          <tr>
-            <td><a href="https://github.com/Darshan-05032003/ai-customer-support-agent" target="_blank" rel="noopener">ai-customer-support-agent</a><small>Python · evaluation pipeline</small></td>
-            <td>Classifies support tweets by intent, drafts replies grounded in a brand's history, escalates what it cannot answer and explains each decision. Built on 2.8M tweets, with reproducibility and honest evaluation over system size.</td>
-            <td class="num"><b>99.8%</b><small>conversation-link integrity</small></td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="stack">Older work, from Flutter expense trackers to an LSTM stock predictor, is on <a href="https://github.com/Darshan-05032003?tab=repositories" target="_blank" rel="noopener">GitHub</a>.</p>
+<div class="kerb" aria-hidden="true"></div>
+
+<!-- ===================== PACE ===================== -->
+<section class="sec" id="pace">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">03 / Race pace</p>
+    <h2>Telemetry from the repos.</h2>
+    <p class="sec-intro">Purple is the session best. Deltas are to the fastest entry. Coverage gates fail the build if any of these drop.</p>
+  </div>
+  <div class="pace">
+    <div class="chart" data-reveal>
+      <h3>Line coverage</h3>
+      <ol class="bars" id="bars-cov"></ol>
+    </div>
+    <div class="chart" data-reveal style="--d:.08s">
+      <h3>Tests in the suite</h3>
+      <ol class="bars" id="bars-tests"></ol>
     </div>
   </div>
 </section>
 
-<!-- ================= ABOUT ================= -->
-<section id="about">
-  <div class="row">
-    <div class="margin">About</div>
-    <div class="body">
-      <h2 class="sec-title">Why the ledger paper.</h2>
-      <div class="about-grid">
-        <div>
-          <p>Bookkeepers solved "how do we trust a number nobody can un-write?" centuries before databases existed: write every movement twice, never erase, correct with a new entry. Most of what I care about in backend engineering is that same instinct applied to concurrent systems, so this page is set on a ledger.</p>
-          <p>I'm Darshan Sonawane, a backend and Android engineer. The pattern across my repositories is the same: pick the one guarantee that matters (no oversold unit, no double charge, no unbalanced journal, no missed exit event), write the test that would catch its failure, then build until that test is green and keep it green in CI.</p>
-          <p>I learn by building the hard version of the thing: the ledger instead of a to-do app, the race test instead of a screenshot, the state machine with all 49 transitions tested instead of a happy path. What I can show is systems that hold up when you push on them, and the tests that prove it.</p>
-        </div>
-        <dl class="kit">
-          <div><dt>Backend</dt><dd>Java 21, Spring Boot 4, Spring Security, JPA/Hibernate, Flyway, PostgreSQL, MySQL, Redis, Kafka</dd></div>
-          <div><dt>Android</dt><dd>Kotlin, Jetpack Compose, MVVM, Hilt, Room, WorkManager, CameraX, ML Kit, Geofencing API, Keystore, Firebase (Auth, Firestore, Functions, FCM), Flutter</dd></div>
-          <div><dt>Testing</dt><dd>JUnit 5, Mockito, Testcontainers, Awaitility, ArchUnit, JaCoCo and Kover gates in CI, golden tests, load and chaos simulations</dd></div>
-          <div><dt>Delivery</dt><dd>Docker multi-stage, docker compose, GitHub Actions, JitPack, Actuator, Micrometer/Prometheus</dd></div>
-          <div><dt>Also</dt><dd>Kotlin Multiplatform (CheckoutKit core), Spring Batch, Python data and evaluation pipelines</dd></div>
-        </dl>
-      </div>
+<div class="kerb" aria-hidden="true"></div>
+
+<!-- ===================== PIT WALL ===================== -->
+<section class="sec" id="pitwall">
+  <div class="sec-head" data-reveal>
+    <p class="sec-num">04 / Pit wall</p>
+    <h2>Box, box. Two strategies.</h2>
+  </div>
+  <div class="strategies">
+    <div class="strat" data-reveal>
+      <p class="tyre-row"><span class="tyre soft">S</span>Strategy A</p>
+      <h3>Freelance</h3>
+      <p>Small, well-scoped builds where correctness matters more than pixels.</p>
+      <ul>
+        <li>REST backends in Spring Boot with tests, Docker and CI from day one</li>
+        <li>Android apps in Kotlin and Compose, including background work and push</li>
+        <li>Fixing concurrency, double-charge and data-integrity bugs in systems you already run</li>
+      </ul>
+      <p class="fine">You get a repo you own, a README anyone can run, and a short walkthrough video.</p>
+    </div>
+    <div class="strat" data-reveal style="--d:.08s">
+      <p class="tyre-row"><span class="tyre hard">H</span>Strategy B</p>
+      <h3>Full-time</h3>
+      <p>Backend or Android SDE roles on teams that care how systems behave under load.</p>
+      <ul>
+        <li>Comfortable owning a service end to end: schema, API, tests, deploy</li>
+        <li>Writes the README and the design decision, not just the code</li>
+        <li>Productive in Java/Spring and Kotlin/Compose codebases from day one</li>
+      </ul>
+      <p class="fine">Resume on request; the repositories on this page are the real portfolio.</p>
     </div>
   </div>
-</section>
 
-<!-- ================= HIRE ================= -->
-<section id="hire">
-  <div class="row">
-    <div class="margin">Hire</div>
-    <div class="body">
-      <h2 class="sec-title">Two ways to work with me.</h2>
-      <div class="hire-grid">
-        <div>
-          <h3>Freelance</h3>
-          <p>Small, well-scoped builds where correctness matters more than pixels.</p>
-          <ul>
-            <li>REST backends in Spring Boot with tests, Docker and CI from day one</li>
-            <li>Android apps in Kotlin and Compose, including background work and push</li>
-            <li>Fixing concurrency, double-charge and data-integrity bugs in existing systems</li>
-          </ul>
-          <p>You get a repo you own, a README anyone can run, and a short Loom walkthrough.</p>
-        </div>
-        <div>
-          <h3>Full-time</h3>
-          <p>Backend or Android SDE-1 roles on teams that care about how systems behave under load.</p>
-          <ul>
-            <li>Comfortable owning a service end to end: schema, API, tests, deploy</li>
-            <li>Writes the README and the ADR, not just the code</li>
-            <li>Productive in Java/Spring and Kotlin/Compose codebases from day one</li>
-          </ul>
-          <p>Resume on request; the repositories on this page are the real portfolio.</p>
-        </div>
-      </div>
-      <div class="contact-line">
-        <a class="addr" href="mailto:sonawanedarshan35@gmail.com">sonawanedarshan35@gmail.com</a>
-        <button class="btn ghost" type="button" id="copy-mail">Copy address</button>
-        <span class="copied" id="copied" aria-live="polite"></span>
-      </div>
-      <div class="ctas" style="margin-top:18px">
-        <a class="btn ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener">GitHub</a>
-      </div>
+  <div class="radio" data-reveal>
+    <p class="radio-lbl">Team radio</p>
+    <a class="radio-addr" href="mailto:sonawanedarshan35@gmail.com">sonawanedarshan35@gmail.com</a>
+    <div class="radio-acts">
+      <button class="btn btn-red" type="button" id="copy-mail"><span>Copy address</span></button>
+      <a class="btn btn-ghost" href="https://github.com/Darshan-05032003" target="_blank" rel="noopener noreferrer"><span>GitHub</span></a>
+      <span class="copied" id="copied" aria-live="polite"></span>
     </div>
+  </div>
+
+  <div class="driver" data-reveal>
+    <div>
+      <p class="sec-num">Driver profile</p>
+      <p>The pattern across my repositories is the same: pick the one guarantee that matters (no oversold unit, no double charge, no unbalanced journal, no missed exit event), write the test that would catch its failure, then build until that test is green and keep it green in CI.</p>
+      <p>I learn by building the hard version of the thing: the ledger instead of the to-do app, the race test instead of the screenshot, the state machine with all 49 transitions tested instead of a happy path.</p>
+    </div>
+    <dl class="kit">
+      <div><dt>Backend</dt><dd>Java 21, Spring Boot 4, Spring Security, Spring Batch, JPA/Hibernate, Flyway, PostgreSQL, MySQL, Redis, Kafka</dd></div>
+      <div><dt>Android</dt><dd>Kotlin, Jetpack Compose, MVVM, Hilt, Room, WorkManager, CameraX, ML Kit, Keystore, Firebase, Flutter</dd></div>
+      <div><dt>Testing</dt><dd>JUnit 5, Mockito, Testcontainers, Awaitility, ArchUnit, JaCoCo and Kover gates, golden tests, load and chaos simulations</dd></div>
+      <div><dt>Delivery</dt><dd>Docker multi-stage, docker compose, GitHub Actions, JitPack, Actuator, Micrometer/Prometheus</dd></div>
+    </dl>
+  </div>
+
+  <!-- reaction test -->
+  <div class="react" id="react" data-reveal>
+    <div>
+      <p class="sec-num">Before you go</p>
+      <h3>Reaction test</h3>
+      <p class="react-help" id="react-help">Press start, then tap the panel (or hit Space) the moment the lights go out.</p>
+    </div>
+    <div class="react-pad" id="react-pad" tabindex="0" role="button" aria-label="Reaction test pad">
+      <div class="gantry small" id="react-gantry">
+        <div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div><div class="pod"><i></i><i></i></div>
+      </div>
+      <p class="react-out" id="react-out" aria-live="polite">—</p>
+      <p class="react-best" id="react-best"></p>
+    </div>
+    <button class="btn btn-red" type="button" id="react-start"><span>Start</span></button>
   </div>
 </section>
 </main>
 
-<footer class="wrap">
-  <div class="row">
-    <div class="margin">Closing<br>balance</div>
-    <div class="body">
-      <div class="tb">
-        <div><span>Tests across the repos on this page</span><span>3,100+</span></div>
-        <div><span>Oversold units</span><span>0</span></div>
-        <div><span>Double charges</span><span>0</span></div>
-        <div><span>Unbalanced journals accepted</span><span>0</span></div>
-        <div><span>Books</span><span>Balanced</span></div>
-      </div>
-      <p class="fine">This page is a single HTML file with no framework and no tracking. The lab simulations are covered by unit tests in <a href="https://github.com/Darshan-05032003/Portfolio" target="_blank" rel="noopener">its repository</a>. Set in Bodoni Moda and Schibsted Grotesk. © Darshan Sonawane, 2026.</p>
+<footer class="foot">
+  <div class="chequer" aria-hidden="true"></div>
+  <div class="foot-in">
+    <p class="sec-num">Chequered flag · closing balance</p>
+    <div class="tb">
+      <div><span>Tests across the repos on this page</span><b>3,100+</b></div>
+      <div><span>Oversold units</span><b>0</b></div>
+      <div><span>Double charges</span><b>0</b></div>
+      <div><span>Unbalanced journals accepted</span><b>0</b></div>
     </div>
+    <p class="fine">One HTML file, no framework, no tracking. Animations run on transforms and opacity with frame-rate-independent smoothing; the math and the lab simulations are unit-tested in <a href="https://github.com/Darshan-05032003/Portfolio" target="_blank" rel="noopener noreferrer">the repository</a>. © Darshan Sonawane, 2026.</p>
   </div>
 </footer>
 
+
+
+<script src="motion.js"></script>
 <script src="sim.js"></script>
 <script src="app.js"></script>
 </body>
