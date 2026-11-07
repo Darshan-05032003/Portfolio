@@ -14,4 +14,4 @@ npm test          # node --test test/sim.test.js
 npm run build     # dist/index.html → docs/index.html
 ```
 
-CI runs the tests on every push and fails if `docs/index.html` is out of date.
+docs/index.html is the built page served by GitHub Pages (Settings → Pages → main, /docs). Run `npm run build` after editing `src/` and commit the result.
