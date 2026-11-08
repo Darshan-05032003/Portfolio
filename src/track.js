@@ -19,8 +19,8 @@ export function buildTrack(tier) {
 
   // ---------- asphalt (UV scrolls) ----------
   const asphaltTex = canvasTex(512, 512, (c, w, h) => {
-    c.fillStyle = '#0e0e11'; c.fillRect(0, 0, w, h);
-    for (let i = 0; i < 9000; i++) { const v = 10 + Math.random() * 22; c.fillStyle = `rgb(${v},${v},${v + 3})`; c.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); }
+    c.fillStyle = '#0b0b0d'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 12000; i++) { const v = 8 + Math.random() * 18; c.fillStyle = `rgb(${v},${v},${v + 3})`; c.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5); }
     // rubbered racing line, darker
     const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0.28, 'rgba(0,0,0,0)'); gr.addColorStop(0.42, 'rgba(0,0,0,.45)'); gr.addColorStop(0.58, 'rgba(0,0,0,.45)'); gr.addColorStop(0.72, 'rgba(0,0,0,0)');
     c.fillStyle = gr; c.fillRect(0, 0, w, h);
@@ -104,6 +104,9 @@ export function buildTrack(tier) {
   // ---------- pit wall on the camera side (moving) ----------
   const pit = new THREE.Mesh(new THREE.BoxGeometry(LOOP * 3, 1.1, 0.3), new THREE.MeshStandardMaterial({ color: 0x15161b, roughness: 0.9 }));
   pit.position.set(0, 0.55, HALF + 4.2); g.add(pit);
+
+  // the reflection environment is tuned for the car's paint; the circuit itself takes only a little of it
+  g.traverse((o) => { if (o.isMesh && o.material && o.material.isMeshStandardMaterial && !(o.material.emissiveIntensity > 1)) o.material.envMapIntensity = o.material.metalness > 0.5 ? 0.5 : 0.18; });
 
   let offset = 0;
   function advance(dx) {

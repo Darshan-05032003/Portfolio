@@ -35,7 +35,7 @@ export function createFx(scene) {
   let smokeAcc = 0, sparkAcc = 0;
 
   /* speed in m/s, accel in m/s², slip 0..1 (hard scroll), rearWheels: [{x,y,z}] world positions, exhaustPos */
-  function update(dt, speed, accel, slip, rearWheels, exhaust) {
+  function update(dt, speed, accel, slip, rearWheels, exhaust, flameVis = 1) {
     // tyre smoke when slipping (hard acceleration / lock-up on sudden scroll)
     smokeAcc += slip * 60 * dt;
     while (smokeAcc >= 1) { smokeAcc -= 1; const w = rearWheels[Math.random() < 0.5 ? 0 : 1]; smoke.emit(w.x - 0.3, 0.1, w.z + (Math.random() - 0.5) * 0.3, -2 - Math.random() * 2, 0.8 + Math.random() * 1.2, (Math.random() - 0.5) * 1.5, 0.9 + Math.random() * 0.6); }
@@ -47,7 +47,7 @@ export function createFx(scene) {
     // exhaust flicker on lift/accel
     flame.position.set(exhaust.x, exhaust.y, exhaust.z);
     const target = Math.min(1, Math.max(0, accel * 0.08 + (slip > 0.2 ? 0.6 : 0)));
-    flame.material.opacity += (target * (0.5 + Math.random() * 0.5) - flame.material.opacity) * 0.5;
+    flame.material.opacity += (target * flameVis * (0.5 + Math.random() * 0.5) - flame.material.opacity) * 0.5;
     flame.scale.set(0.35 + flame.material.opacity * 0.6, 0.25 + flame.material.opacity * 0.3, 1);
     return a || b || flame.material.opacity > 0.02;
   }

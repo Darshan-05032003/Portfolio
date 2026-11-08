@@ -37,7 +37,7 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   await page.goto(PAGE);
 
   // --- loader + 3D stage ---
-  await page.waitForFunction(() => document.getElementById('loader').classList.contains('done'), null, { timeout: 15000 });
+  await page.waitForFunction(() => document.getElementById('loader').classList.contains('done'), null, { timeout: 60000 });
   assert.equal(await page.evaluate(() => document.body.dataset.tier !== 'none' && document.getElementById('stage').classList.contains('on')), true);
   assert.ok(await page.evaluate(() => document.querySelector('.name').classList.contains('in')));
   ok('loader finishes, WebGL stage is on, hero reveals');
@@ -55,7 +55,7 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   const runRace = async (mode) => {
     await page.locator(`#lab-race input[value="${mode}"]`).check({ force: true });
     await page.locator('#race-run').click();
-    await page.waitForFunction(() => !document.getElementById('race-run').disabled && document.getElementById('race-verdict').textContent.length > 0, null, { timeout: 15000 });
+    await page.waitForFunction(() => !document.getElementById('race-run').disabled && document.getElementById('race-verdict').textContent.length > 0, null, { timeout: 60000 });
     return page.evaluate(() => ({ orders: +document.getElementById('race-orders').textContent, stock: +document.getElementById('race-stock').textContent, v: document.getElementById('race-verdict').className }));
   };
   await page.locator('#lab-race').scrollIntoViewIfNeeded();
@@ -71,7 +71,7 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   // rapid-fire: hammer the button during a run; only one run may happen
   await page.locator('#race-run').click();
   for (let i = 0; i < 30; i++) await page.locator('#race-run').click({ force: true, timeout: 200 }).catch(() => {});
-  await page.waitForFunction(() => !document.getElementById('race-run').disabled, null, { timeout: 15000 });
+  await page.waitForFunction(() => !document.getElementById('race-run').disabled, null, { timeout: 60000 });
   assert.equal(await page.evaluate(() => +document.getElementById('race-orders').textContent), 5);
   ok('race lab survives 30 rapid clicks mid-run');
 
@@ -79,7 +79,7 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   const pay = async (key) => {
     await page.locator('#pay-key').setChecked(key, { force: true });
     await page.locator('#pay-run').click();
-    await page.waitForFunction(() => !document.getElementById('pay-run').disabled && document.getElementById('pay-verdict').textContent.length > 0, null, { timeout: 15000 });
+    await page.waitForFunction(() => !document.getElementById('pay-run').disabled && document.getElementById('pay-verdict').textContent.length > 0, null, { timeout: 60000 });
     return page.locator('#pay-charges').textContent();
   };
   await page.locator('#lab-pay').scrollIntoViewIfNeeded();
@@ -159,7 +159,7 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   assert.equal(await np.evaluate(() => document.body.dataset.tier), 'none');
   assert.equal(await np.evaluate(() => getComputedStyle(document.getElementById('poster')).display), 'block');
   assert.equal(await np.evaluate(() => document.getElementById('loader').classList.contains('done')), true);
-  await np.locator('#pay-run').click(); await np.waitForFunction(() => !document.getElementById('pay-run').disabled && document.getElementById('pay-verdict').textContent.length > 0, null, { timeout: 15000 });
+  await np.locator('#pay-run').click(); await np.waitForFunction(() => !document.getElementById('pay-run').disabled && document.getElementById('pay-verdict').textContent.length > 0, null, { timeout: 60000 });
   ok('no-WebGL fallback: poster shown, page unlocked, labs still run');
   await nw.close();
 

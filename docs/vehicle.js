@@ -12,7 +12,7 @@ const LENGTH = 5.6;
 export function proceduralVehicle(opts) {
   const car = buildCar(opts);
   const d = car.userData;
-  return { root: car, wheels: d.wheels.map((w) => ({ node: w, axis: 'z', front: w.position.x > 0 })), drs: d.drs, exhaust: new THREE.Vector3(-2.3, 0.45, 0), rearWheels: d.wheels.filter((w) => w.position.x < 0).map((w) => w.position), procedural: true };
+  return { root: car, wheels: d.wheels.map((w) => ({ node: w, axis: 'z', front: w.position.x > 0 })), drs: d.drs, exhaust: new THREE.Vector3(-2.56, 0.52, 0), rearWheels: d.wheels.filter((w) => w.position.x < 0).map((w) => w.position), procedural: true };
 }
 
 export function loadVehicle(url, onProgress) {

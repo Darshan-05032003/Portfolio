@@ -40,6 +40,18 @@ code { font-family: var(--mono); font-size: .86em; color: var(--ink); background
 .poster { position: fixed; inset: 0; z-index: 0; pointer-events: none; display: none; background: radial-gradient(70% 55% at 65% 60%, #1a1b22 0%, var(--c0) 70%); }
 body[data-tier="none"] .poster { display: block; }
 body[data-tier="none"] .stage { display: none; }
+/* onboard HUD: hairline panel, bottom-right, desktop only */
+.hud { position: fixed; right: 28px; bottom: 26px; z-index: 5; pointer-events: none; width: 188px; padding: 12px 14px 11px; border: 1px solid rgba(255,255,255,.12); background: rgba(8,8,10,.42); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.hud[hidden], body[data-tier="none"] .hud { display: none; }
+.shift { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; margin-bottom: 10px; }
+.shift i { height: 4px; background: rgba(255,255,255,.1); transition: background 60ms linear; }
+.shift i.on { background: var(--ink); } .shift i.on:nth-child(n+5) { background: var(--accent); } .shift i.on:nth-child(n+9) { background: #ff2a1a; }
+.hud-row { display: flex; align-items: baseline; gap: 6px; }
+.hud-spd { font-size: 30px; line-height: 1; letter-spacing: 0; font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right; }
+.hud-u { color: var(--ink-3); }
+.hud-gear { margin-left: auto; font-size: 22px; line-height: 1; width: 1.4em; text-align: center; border: 1px solid rgba(255,255,255,.18); padding: 3px 0; }
+.hud-phase { margin-top: 8px; color: var(--ink-2); }
+@media (max-width: 999px) { .hud { display: none; } }
 
 /* ---------- chrome ---------- */
 .top { position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; padding: 18px var(--pad) 0; pointer-events: none; }

@@ -114,7 +114,7 @@ else {
   const sections = ['top', 'statement', 'work', 'labs', 'about', 'contact'].map((id) => $(id));
   // shot list (brief: reveal → silhouette → cockpit → rear/DRS → detail → exit); car-relative positions
   const SHOTS = [
-    { pos: [10.4, 1.3, 7.6], look: [0.3, 0.55, 0], fov: 27, shift: [0.3, 0.0] },   // 3/4 front, parked right of the name
+    { pos: [11.6, 1.25, 8.6], look: [0.3, 0.5, 0], fov: 27, shift: [0.27, 0.04] },   // 3/4 front, parked right of the name
     { pos: [1.5, 1.3, 12.0], look: [0, 0.45, 0], fov: 26, shift: [0.22, -0.08] },     // side silhouette, low under the statement
     { pos: [-1.2, 2.2, 5.6], look: [-0.4, 0.7, 0], fov: 32, shift: [0.34, 0] },    // cockpit, right of the timing tower
     { pos: [-9.0, 1.8, 6.4], look: [-1.6, 0.6, 0], fov: 30, shift: [0.3, -0.3] },  // rear 3/4, DRS open, low right under the labs
@@ -122,7 +122,7 @@ else {
     { pos: [12.5, 1.2, 9.5], look: [2.0, 0.4, 0], fov: 28, shift: [-0.2, -0.1] }   // car leaves, bottom left
   ];
   const mobile = window.innerWidth < 1000;
-  if (mobile) SHOTS.forEach((s, i) => { s.pos = [s.pos[0] * 1.3, s.pos[1] * 1.15, s.pos[2] * 1.3]; s.shift = i === 0 ? [0.05, 0.2] : [0, -0.24]; });
+  if (mobile) SHOTS.forEach((s, i) => { if (i === 0) { s.pos = [13.2, 1.45, 8.2]; s.fov = 44; s.shift = [-0.02, 0.2]; return; } s.pos = [s.pos[0] * 1.3, s.pos[1] * 1.15, s.pos[2] * 1.3]; s.shift = [0, -0.24]; });  // opening shot stays inside the pit wall
   let path, bounds = [];
   function measure() {
     const max = document.documentElement.scrollHeight - innerHeight;
@@ -144,7 +144,9 @@ else {
   if (!coarse) addEventListener('pointermove', (e) => { tx = (e.clientX / innerWidth - 0.5); ty = (e.clientY / innerHeight - 0.5); }, { passive: true });
 
   let prog = M.scrollProgress(scrollY, document.documentElement.scrollHeight, innerHeight), lastY = scrollY, lastT = performance.now(), vel = 0, dirty = true;
-  const drive = D.create();
+  const drive = D.create({ driving: scrollY > innerHeight * 0.5 });
+  window.__drive = drive; window.__S = S;
+  const hud = initHud();
   const cam = S.camera;
   function frame(now) {
     const tIn = performance.now();
@@ -155,21 +157,38 @@ else {
     prog = reduce ? target : M.damp(prog, target, 5, dt);
     px = M.damp(px, tx, 4, dt); py = M.damp(py, ty, 4, dt);
     // the world always moves (the car is driving); scrolling is the throttle
-    drive.step(dt, reduce ? 0 : vel);
+    drive.step(dt, reduce ? 0 : vel, y < innerHeight * 0.15);
     const shake = reduce ? [0, 0] : S.update(dt, drive);
+    hud(drive, now);
     const s = path.sample(prog);
     cam.position.set(s.pos[0] + px * 0.6 + shake[0], s.pos[1] - py * 0.3 + shake[1], s.pos[2]);
     cam.lookAt(s.look[0], s.look[1], s.look[2]);
     if (Math.abs(cam.fov - s.fov) > 0.01) cam.fov = s.fov;
     const W = canvas.clientWidth || innerWidth, Hh = canvas.clientHeight || innerHeight;
     cam.setViewOffset(W, Hh, -s.shift[0] * W, s.shift[1] * Hh, W, Hh); cam.updateProjectionMatrix();
-    const t0 = performance.now(); S.render(); const t1 = performance.now(); dirty = false;
+    const bars = W / Hh > 1.3 && !reduce ? (1 - M.clamp(prog / 0.05, 0, 1)) * 0.085 : 0;
+    const t0 = performance.now(); S.render({ time: now / 1000, blur: reduce ? 0 : M.clamp((drive.speed - 18) / 70, 0, 1), bars }); const t1 = performance.now(); dirty = false;
     S.noteFrame(dt * 1000, now);
     if (window.__perf) window.__perf.push([t0 - tIn, t1 - t0, S.renderer.getPixelRatio()]);
     if (!document.hidden && !reduce) requestAnimationFrame(frame);
   }
   // optional real model: model/car.glb next to the page (dropped in by the build); silent fallback to the code car
   const MODEL = 'model/car.glb';
+  /* onboard broadcast HUD: speed, gear, shift lights, phase. Text writes throttled to ~15 Hz. */
+  function initHud() {
+    const root = $('hud'); if (!root) return () => {};
+    const spd = $('hud-spd'), gear = $('hud-gear'), phase = $('hud-phase'), lights = [...root.querySelectorAll('.shift i')];
+    const LABEL = { grid: 'Grid · engine on', turn: 'Out of the box', launch: 'Launch', drive: 'Push', brake: 'Box, box' };
+    let last = 0, ls = '', lg = '', lp = '', ll = -1;
+    root.hidden = false;
+    return (d, now) => {
+      if (now - last < 66) return; last = now;
+      const s = String(Math.round(d.kmh)), g = d.gear ? String(d.gear) : 'N', p = LABEL[d.state] || '';
+      if (s !== ls) { spd.textContent = s; ls = s; } if (g !== lg) { gear.textContent = g; lg = g; } if (p !== lp) { phase.textContent = p; lp = p; }
+      const n = Math.round(M.clamp((d.rpm - 0.5) / 0.48, 0, 1) * lights.length);
+      if (n !== ll) { lights.forEach((l, i) => l.classList.toggle('on', i < n)); ll = n; }
+    };
+  }
   fetch('model/manifest.json').then((r) => r.ok ? r.json() : null).then((m) => {
     if (!m || !m.car) return null;
     return S.useModel(MODEL, (f) => progress(0.5 + f * 0.4)).then((v) => { window.__vehicle = { procedural: false, wheels: v.wheelCount }; dirty = true; }).catch((e) => { console.warn('model failed, keeping procedural car', e); });
@@ -178,7 +197,7 @@ else {
     canvas.classList.add('on');
     setTimeout(loaderDone, reduce ? 0 : 350);
     requestAnimationFrame(frame);
-    if (reduce) { drive.step(0.016, 0); S.update(0.016, drive); S.render(); }
+    if (reduce) { drive.step(0.016, 0, true); S.update(0.016, drive); S.render({ time: 0, blur: 0, bars: 0 }); }
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !reduce) { lastT = performance.now(); lastY = scrollY; dirty = true; requestAnimationFrame(frame); } });
 }
