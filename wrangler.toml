@@ -1,0 +1,4 @@
+# Cloudflare Pages picks this up automatically: no build command, serve the prebuilt docs/ folder.
+name = "darshan-portfolio"
+pages_build_output_dir = "docs"
+compatibility_date = "2026-11-01"

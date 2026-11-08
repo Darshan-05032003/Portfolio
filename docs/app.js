@@ -3,10 +3,11 @@
 import './motion.js';
 import './cinema.js';
 import './sim.js';
+import './drive.js';
 import { createScene, deviceTier } from './scene.js';
 import { initLabs } from './labs.js';
 
-const M = window.Motion, C = window.Cinema;
+const M = window.Motion, C = window.Cinema, D = window.Drive;
 const $ = (id) => document.getElementById(id);
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = window.matchMedia('(pointer: coarse)').matches;
@@ -67,7 +68,6 @@ const REPOS = [
   ['transaction-reconciliation-batch', 'REC', 'Java', 'Nightly bank reconciliation that explains every break', 'Java 21 · Spring Batch · PostgreSQL · 309 tests', '97.0%', ['Million-line statement files loaded exactly once, with checksums and control totals.', 'Set-wise matching against the ledger; every difference classified as a break.', 'Maker/approver resolution; restarts after a mid-run failure never re-post.']],
   ['SplitSmart', 'SPL', 'Kotlin', 'Receipt photo to paise-exact split to one-tap UPI settle-up', 'Kotlin · Compose · Hilt · Gemini', '95.2%', ['On-device ML Kit OCR, then Gemini over a pinned client with strict JSON and a regex fallback.', 'Equal, by-item and by-share splits with proportional tax and tip, paise-exact remainders.', '1,000 concurrent model calls with 60% 429s: zero failures, retries spread by full jitter.']],
   ['PayFlow', 'PAY', 'Kotlin', 'UPI payments built the way a payments team would', 'Kotlin · Compose · Room · ML Kit', '89.0%', ['Idempotency keys stored in Room before the PSP call; status polling with backoff and jitter.', 'Keystore AES-GCM, biometric/PIN lock with lockout, root/tamper detection, FLAG_SECURE.', '1,000 concurrent payments against a flaky PSP: zero duplicate or orphan payments.']],
-  ['GeoGuard', 'GEO', 'Kotlin', 'Group geofence alerts that arrive with the app closed', 'Kotlin · Compose · WorkManager · Firebase', '—', ['OS geofencing instead of GPS polling: battery-safe, background-capable.', 'WorkManager uploads with deterministic event ids, so a retry can never duplicate an alert.', 'Server-side FCM fan-out, so no secrets ship in the APK.']],
   ['FinPay', 'FIN', 'Flutter', 'A fintech UI built test-first: 1,500+ tests, 144 golden baselines', 'Flutter · sqflite', '—', ['Exact-paise ledger in sqflite, salted credential hashing, idempotent payment flow.', 'Stress suite pushes 100,000 ledger rows and 1,000-tap storms through the real screens.']],
   ['ai-customer-support-agent', 'AI', 'Python', 'Classifies, drafts grounded replies, escalates and explains', 'Python · evaluation pipeline', '—', ['Built on 2.8M support tweets with 99.8% conversation-link integrity.', 'Reproducibility and honest evaluation over system size.']]
 ];
@@ -114,8 +114,8 @@ else {
   const sections = ['top', 'statement', 'work', 'labs', 'about', 'contact'].map((id) => $(id));
   // shot list (brief: reveal → silhouette → cockpit → rear/DRS → detail → exit); car-relative positions
   const SHOTS = [
-    { pos: [10.2, 2.4, 8.4], look: [0.3, 0.4, 0], fov: 27, shift: [0.3, 0.04] },   // 3/4 front, parked right of the name
-    { pos: [0.8, 1.2, 11.5], look: [0, 0.45, 0], fov: 26, shift: [0, -0.12] },     // side silhouette, low under the statement
+    { pos: [10.4, 1.3, 7.6], look: [0.3, 0.55, 0], fov: 27, shift: [0.3, 0.0] },   // 3/4 front, parked right of the name
+    { pos: [1.5, 1.3, 12.0], look: [0, 0.45, 0], fov: 26, shift: [0.22, -0.08] },     // side silhouette, low under the statement
     { pos: [-1.2, 2.2, 5.6], look: [-0.4, 0.7, 0], fov: 32, shift: [0.34, 0] },    // cockpit, right of the timing tower
     { pos: [-9.0, 1.8, 6.4], look: [-1.6, 0.6, 0], fov: 30, shift: [0.3, -0.3] },  // rear 3/4, DRS open, low right under the labs
     { pos: [2.5, 9.5, 4.0], look: [0, 0.3, 0], fov: 34, shift: [0.1, -0.34] },     // high detail, low under the kit
@@ -143,41 +143,42 @@ else {
   let px = 0, py = 0, tx = 0, ty = 0;
   if (!coarse) addEventListener('pointermove', (e) => { tx = (e.clientX / innerWidth - 0.5); ty = (e.clientY / innerHeight - 0.5); }, { passive: true });
 
-  let prog = M.scrollProgress(scrollY, document.documentElement.scrollHeight, innerHeight), lastY = scrollY, lastT = performance.now(), vel = 0, dirty = true, spin = 0, drs = 0, yaw = 0;
-  const cam = S.camera, look = { x: 0, y: 0.5, z: 0 };
+  let prog = M.scrollProgress(scrollY, document.documentElement.scrollHeight, innerHeight), lastY = scrollY, lastT = performance.now(), vel = 0, dirty = true;
+  const drive = D.create();
+  const cam = S.camera;
   function frame(now) {
     const tIn = performance.now();
     const dt = M.clamp((now - lastT) / 1000, 0, 0.1); lastT = now;
     const y = scrollY; const raw = dt > 0 ? (y - lastY) / dt : 0; lastY = y;
     vel = M.damp(vel, raw, 6, dt);
     const target = M.scrollProgress(y, document.documentElement.scrollHeight, innerHeight);
-    const prev = prog; prog = reduce ? target : M.damp(prog, target, 5, dt);
-    // pointer
-    const ppx = M.damp(px, tx, 4, dt), ppy = M.damp(py, ty, 4, dt);
-    const moved = Math.abs(prog - prev) > 1e-5 || Math.abs(ppx - px) > 1e-4 || Math.abs(ppy - py) > 1e-4 || Math.abs(vel) > 2;
-    px = ppx; py = ppy;
-    if (moved || dirty) {
-      const s = path.sample(prog);
-      cam.position.set(s.pos[0] + px * 0.6, s.pos[1] - py * 0.3, s.pos[2]);
-      look.x = s.look[0]; look.y = s.look[1]; look.z = s.look[2];
-      cam.lookAt(look.x, look.y, look.z);
-      if (Math.abs(cam.fov - s.fov) > 0.01) cam.fov = s.fov;
-      const W = canvas.clientWidth || innerWidth, Hh = canvas.clientHeight || innerHeight;
-      cam.setViewOffset(W, Hh, -s.shift[0] * W, s.shift[1] * Hh, W, Hh); cam.updateProjectionMatrix();
-      // car: wheels roll with scroll, slight yaw lean, DRS opens in shot 3
-      spin += C.wheelSpin(vel, dt); S.wheels.forEach((w) => { w.rotation.z = -spin; });
-      yaw = M.damp(yaw, C.carYaw(vel), 5, dt); S.carPivot.rotation.y = yaw;
-      const drsT = s.seg >= 6 ? 1 : 0; drs = M.damp(drs, drsT, 4, dt); S.drs.rotation.z = drs * 0.6;
-      const t0 = performance.now(); S.render(); const t1 = performance.now(); dirty = false;
-      S.noteFrame(dt * 1000, now);
-      if (window.__perf) window.__perf.push([t0 - tIn, t1 - t0, S.renderer.getPixelRatio()]);
-    }
-    if (!document.hidden) requestAnimationFrame(frame);
+    prog = reduce ? target : M.damp(prog, target, 5, dt);
+    px = M.damp(px, tx, 4, dt); py = M.damp(py, ty, 4, dt);
+    // the world always moves (the car is driving); scrolling is the throttle
+    drive.step(dt, reduce ? 0 : vel);
+    const shake = reduce ? [0, 0] : S.update(dt, drive);
+    const s = path.sample(prog);
+    cam.position.set(s.pos[0] + px * 0.6 + shake[0], s.pos[1] - py * 0.3 + shake[1], s.pos[2]);
+    cam.lookAt(s.look[0], s.look[1], s.look[2]);
+    if (Math.abs(cam.fov - s.fov) > 0.01) cam.fov = s.fov;
+    const W = canvas.clientWidth || innerWidth, Hh = canvas.clientHeight || innerHeight;
+    cam.setViewOffset(W, Hh, -s.shift[0] * W, s.shift[1] * Hh, W, Hh); cam.updateProjectionMatrix();
+    const t0 = performance.now(); S.render(); const t1 = performance.now(); dirty = false;
+    S.noteFrame(dt * 1000, now);
+    if (window.__perf) window.__perf.push([t0 - tIn, t1 - t0, S.renderer.getPixelRatio()]);
+    if (!document.hidden && !reduce) requestAnimationFrame(frame);
   }
-  // warm up: compile shaders, first render, then reveal
-  S.render();
-  canvas.classList.add('on');
-  setTimeout(loaderDone, reduce ? 0 : 350);
-  requestAnimationFrame(frame);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastT = performance.now(); lastY = scrollY; dirty = true; requestAnimationFrame(frame); } });
+  // optional real model: model/car.glb next to the page (dropped in by the build); silent fallback to the code car
+  const MODEL = 'model/car.glb';
+  fetch('model/manifest.json').then((r) => r.ok ? r.json() : null).then((m) => {
+    if (!m || !m.car) return null;
+    return S.useModel(MODEL, (f) => progress(0.5 + f * 0.4)).then((v) => { window.__vehicle = { procedural: false, wheels: v.wheelCount }; dirty = true; }).catch((e) => { console.warn('model failed, keeping procedural car', e); });
+  }).catch(() => null).finally(() => {
+    S.render();
+    canvas.classList.add('on');
+    setTimeout(loaderDone, reduce ? 0 : 350);
+    requestAnimationFrame(frame);
+    if (reduce) { drive.step(0.016, 0); S.update(0.016, drive); S.render(); }
+  });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !reduce) { lastT = performance.now(); lastY = scrollY; dirty = true; requestAnimationFrame(frame); } });
 }

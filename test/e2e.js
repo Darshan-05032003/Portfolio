@@ -45,11 +45,11 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   // --- timing tower ---
   await page.locator('#work').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
-  assert.equal(await page.locator('#tower .row').count(), 9);
+  assert.equal(await page.locator('#tower .row').count(), 8);
   await page.locator('#tower .row-btn').first().click();
   assert.equal(await page.locator('#tower .row-btn').first().getAttribute('aria-expanded'), 'true');
   assert.match(await page.locator('#tower .row').first().locator('.detail-in a').getAttribute('href'), /github\.com\/Darshan-05032003\/ecommerce-backend$/);
-  ok('timing tower renders 9 repos and rows expand');
+  ok('timing tower renders 8 repos and rows expand');
 
   // --- lab 1 ---
   const runRace = async (mode) => {
@@ -101,19 +101,6 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   assert.equal(await page.locator('#tb-stamp').textContent(), 'Balanced');
   assert.equal(await page.locator('#tb-d').textContent(), await page.locator('#tb-c').textContent());
   ok('ledger lab: edit refused, four-eyes enforced, unbalanced journal refused, books balanced');
-
-  // --- lab 4 ---
-  await page.locator('#lab-geo').scrollIntoViewIfNeeded();
-  await page.locator('#geo-dot').focus();
-  for (let i = 0; i < 14; i++) await page.keyboard.press('ArrowRight');
-  await page.waitForFunction(() => document.querySelectorAll('#geo-screen .notif').length === 1, null, { timeout: 6000 });
-  assert.equal(await page.locator('#geo-status').textContent(), 'Track limits exceeded');
-  for (let i = 0; i < 14; i++) await page.keyboard.press('ArrowLeft');
-  for (let i = 0; i < 14; i++) await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(600);
-  assert.equal(await page.locator('#geo-screen .notif').count(), 1, 'second exit inside the cooldown must not push');
-  await page.screenshot({ path: '/tmp/f1v2e/lab-geo.png', clip: await page.locator('#lab-geo').boundingBox() });
-  ok('geofence lab: exit pushes once, cooldown swallows the repeat');
 
   // --- CSP + errors ---
   const csp = await page.evaluate(() => window.__csp);

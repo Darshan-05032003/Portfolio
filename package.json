@@ -1,12 +1,15 @@
 {
-  "name": "darshan-portfolio",
-  "private": true,
-  "version": "4.0.0",
-  "description": "Darshan Sonawane's portfolio: a 3D scroll-cinema page with live, unit-tested system labs.",
+  "name": "f1v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "test": "node --test test/sim.test.js test/motion.test.js test/cinema.test.js",
-    "e2e": "node test/e2e.js",
-    "build": "node build.js && rm -rf docs && cp -r dist docs && rm -f docs/artifact.html"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "license": "MIT"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.170.0"
+  }
 }

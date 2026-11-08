@@ -2,7 +2,10 @@
    environment for reflections, a contact shadow, and the car. Rendering is on demand:
    the page calls scene.render() only when scroll, pointer or time-based motion changes. */
 import * as THREE from './vendor/three.module.min.js';
-import { buildCar, contactShadow } from './car.js';
+import { contactShadow } from './car.js';
+import { buildTrack } from './track.js';
+import { createFx } from './fx.js';
+import { proceduralVehicle, loadVehicle } from './vehicle.js';
 
 export function createScene(canvas, opts = {}) {
   const tier = opts.tier || 'high';                 // 'low' | 'mid' | 'high'
@@ -11,40 +14,43 @@ export function createScene(canvas, opts = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.25;
+  renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = tier === 'high';
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0a0a0c, 10, 30);
+  scene.fog = new THREE.FogExp2(0x06060a, 0.034);
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 80);
   camera.position.set(8, 2, 6); camera.lookAt(0, 0.5, 0);
 
   // --- lighting: hemisphere + key + cool rim + warm rim (no HDR) ---
-  scene.add(new THREE.HemisphereLight(0xaab4cc, 0x050507, 0.6));
-  const key = new THREE.DirectionalLight(0xfff4e8, 3.6); key.position.set(5, 8, 4);
+  scene.add(new THREE.HemisphereLight(0x8a96b8, 0x040406, 0.28));
+  // floodlights: warm key from the lamp side, cool rim from the stands
+  const key = new THREE.DirectionalLight(0xfff0d6, 3.0); key.position.set(3, 9, 6);
   if (tier === 'high') { key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.camera.left = -5; key.shadow.camera.right = 5; key.shadow.camera.top = 5; key.shadow.camera.bottom = -5; key.shadow.bias = -0.0005; }
   scene.add(key);
-  const rimCool = new THREE.DirectionalLight(0x9db4ff, 2.2); rimCool.position.set(-6, 3.5, -5); scene.add(rimCool);
+  const rimCool = new THREE.DirectionalLight(0x9db4ff, 2.6); rimCool.position.set(-5, 4, -7); scene.add(rimCool);
   const rimWarm = new THREE.DirectionalLight(opts.accent || 0xff5a1f, 1.6); rimWarm.position.set(-3, 2, 6); scene.add(rimWarm);
 
   // --- procedural environment (64 px cubemap of a dark studio gradient with a soft top light) ---
   scene.environment = studioEnv(renderer);
 
-  // --- ground: dark plane that receives the key shadow, plus a contact shadow blob ---
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x0b0b0f, roughness: 1, metalness: 0 }));
-  ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+  // --- track + contact shadow ---
+  const track = buildTrack(tier); scene.add(track.group);
   scene.add(contactShadow());
-  // faint lane lines (pit lane feel)
-  const lane = new THREE.Mesh(new THREE.PlaneGeometry(60, 0.04), new THREE.MeshBasicMaterial({ color: 0x1a1b21 }));
-  lane.rotation.x = -Math.PI / 2; lane.position.set(0, 0.002, 2.6); scene.add(lane);
+  const fx = createFx(scene);
 
-  // --- car ---
-  const car = buildCar({ livery: opts.livery, accent: opts.accentPaint, number: opts.number });
-  scene.add(car);
-  if (tier !== 'high') car.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
-
-  const carPivot = new THREE.Group(); scene.add(carPivot); carPivot.add(car);
+  // --- vehicle: procedural now, a loaded .glb when one is provided ---
+  const carPivot = new THREE.Group(); scene.add(carPivot);
+  let vehicle = proceduralVehicle({ livery: opts.livery, accent: opts.accentPaint, number: opts.number });
+  carPivot.add(vehicle.root);
+  if (tier !== 'high') vehicle.root.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
+  async function useModel(url, onProgress) {
+    const v = await loadVehicle(url, onProgress);
+    carPivot.remove(vehicle.root); vehicle = v; carPivot.add(v.root);
+    if (tier !== 'high') v.root.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
+    return v;
+  }
 
   function resize() {
     const w = canvas.clientWidth || window.innerWidth, h = canvas.clientHeight || window.innerHeight;
@@ -63,9 +69,25 @@ export function createScene(canvas, opts = {}) {
     else if (avg < 13 && dpr < maxDpr) { dpr = Math.min(maxDpr, dpr + 0.25); renderer.setPixelRatio(dpr); lastAdjust = now; frameTimes.length = 0; }
   }
 
+  /* Per-frame world update from the drive model: world streams past, wheels spin, body squats/bobs/steers,
+     DRS opens at speed, smoke/sparks/exhaust, camera shake. */
+  let drsOpen = 0;
+  function update(dt, drive) {
+    track.advance(drive.speed * dt);
+    for (const w of vehicle.wheels) {
+      const a = -drive.wheelAngle;
+      if (w.axis === 'z') w.node.rotation.z = a; else if (w.axis === 'x') w.node.rotation.x = a; else w.node.rotation.y = a;
+      if (w.front && vehicle.procedural) w.node.rotation.y = drive.steer * 1.6;
+    }
+    vehicle.root.position.y = drive.bob; vehicle.root.rotation.z = drive.pitch; vehicle.root.rotation.y = drive.steer * 0.35;
+    vehicle.root.rotation.x = -drive.steer * 0.12; // roll into the lean
+    if (vehicle.drs) { drsOpen += ((drive.speed > 70 ? 1 : 0) - drsOpen) * Math.min(1, dt * 4); vehicle.drs.rotation.z = drsOpen * 0.6; }
+    fx.update(dt, drive.speed, drive.accel, drive.slip, vehicle.rearWheels, vehicle.exhaust);
+    return fx.shake(dt, drive.speed);
+  }
   function render() { renderer.render(scene, camera); }
   function dispose() { renderer.dispose(); }
-  return { renderer, scene, camera, car, carPivot, key, rimWarm, resize, render, noteFrame, dispose, wheels: car.userData.wheels, drs: car.userData.drs };
+  return { renderer, scene, camera, carPivot, key, rimWarm, resize, render, update, useModel, noteFrame, dispose, get vehicle() { return vehicle; } };
 }
 
 function studioEnv(renderer) {

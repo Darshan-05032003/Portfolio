@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data: blob:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Darshan Sonawane — backend &amp; Android engineer</title>
-<meta name="description" content="Darshan Sonawane builds backends that stay correct under concurrency and Android apps that work with the app closed. Nine repositories, four systems you can break live.">
+<meta name="description" content="Darshan Sonawane builds backends that stay correct under concurrency and Android apps that work with the app closed. Eight repositories, three systems you can break live.">
 <meta property="og:title" content="Darshan Sonawane — backend & Android engineer">
-<meta property="og:description" content="Backends that stay correct when twenty people click at once. Android apps that keep working after you close them.">
+<meta property="og:description" content="Backends that stay correct when twenty people click at once. Android apps that handle money the way a payments team would.">
 <meta name="theme-color" content="#0a0a0c">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0a0c'/%3E%3Cpath d='M18 44 V20 h14 a12 12 0 0 1 0 24 Z' fill='none' stroke='%23F0F1FA' stroke-width='5'/%3E%3Crect x='44' y='38' width='8' height='8' fill='%23FF5A1F'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,7 +42,7 @@
       <span class="ln"><span class="rv">Darshan</span></span>
       <span class="ln"><span class="rv">Sonawane</span></span>
     </h1>
-    <p class="lede reveal">I build backends that stay correct when twenty people click at once, and Android apps that keep working after you close them.</p>
+    <p class="lede reveal">I build backends that stay correct when twenty people click at once, and Android apps that handle money the way a payments team would.</p>
     <p class="scroll-cue mono reveal" aria-hidden="true">Scroll<span class="cue-line"></span></p>
   </div>
   <dl class="telemetry mono" aria-label="Headline figures">
@@ -57,14 +57,14 @@
 <section class="shot statement" id="statement" data-shot="1">
   <p class="index mono reveal">(01) — Principle</p>
   <h2 class="display reveal-lines">Pick the one guarantee that matters. Write the test that would catch its failure. Build until it's green. Keep it green.</h2>
-  <p class="aside reveal">No oversold unit. No double charge. No unbalanced journal. No missed exit event. The numbers on this page are copied from each repository's own README.</p>
+  <p class="aside reveal">No oversold unit. No double charge. No unbalanced journal. The numbers on this page are copied from each repository's own README.</p>
 </section>
 
 <!-- 03 work: timing tower -->
 <section class="shot work" id="work" data-shot="2">
   <div class="sec-head">
     <p class="index mono reveal">(02) — Work</p>
-    <h2 class="display sm reveal-lines">Nine repositories, ranked.</h2>
+    <h2 class="display sm reveal-lines">Eight repositories, ranked.</h2>
     <p class="aside reveal">Position by line coverage. Purple is the session best. Open a row for the design decisions.</p>
   </div>
   <ol class="tower" id="tower"></ol>
@@ -74,7 +74,7 @@
 <section class="shot labs" id="labs" data-shot="3">
   <div class="sec-head">
     <p class="index mono reveal">(03) — Race control</p>
-    <h2 class="display sm reveal-lines">Four incidents. Try to cause them.</h2>
+    <h2 class="display sm reveal-lines">Three incidents. Try to cause them.</h2>
     <p class="aside reveal">Working models of real failures from the repositories. Break one, then switch on the fix. The simulation logic is unit-tested in this site's repo.</p>
   </div>
 
@@ -132,38 +132,6 @@
       <div class="lab-foot"><small>From <a href="https://github.com/Darshan-05032003/core-banking-ledger" target="_blank" rel="noopener noreferrer">core-banking-ledger</a>; Postgres triggers reject UPDATE and DELETE on the ledger.</small></div>
     </article>
 
-    <article class="lab wide" id="lab-geo" aria-labelledby="geo-h">
-      <header class="lab-head mono"><span>Incident 04</span><span id="geo-status">Inside track limits</span></header>
-      <h3 id="geo-h">Drag Asha past track limits.</h3>
-      <p class="q">Her phone is in her pocket, app closed. Watch what reaches Ravi, and what the 5-minute cooldown swallows.</p>
-      <div class="geo">
-        <div>
-          <svg class="map" id="geo-map" viewBox="0 0 420 300" role="img" aria-label="Map with a circular safe zone; drag the marker or use arrow keys to move Asha">
-            <defs><pattern id="g-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0v30" fill="none" stroke="#1c1d23" stroke-width="1"/></pattern></defs>
-            <rect width="420" height="300" fill="#0e0f13"/><rect width="420" height="300" fill="url(#g-grid)"/>
-            <path d="M-10 222 C 70 196, 140 252, 230 222 S 360 168, 430 196" fill="none" stroke="#17181e" stroke-width="26"/>
-            <circle id="geo-zone" cx="200" cy="150" r="95" fill="rgba(240,241,250,.04)" stroke="#F0F1FA" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="4 6"/>
-            <text x="200" y="40" text-anchor="middle" class="map-lbl">Track limits · 300 m</text>
-            <g><circle cx="232" cy="172" r="7" fill="#F0F1FA"/><text x="246" y="176" class="map-name">Ravi</text></g>
-            <g class="dot" id="geo-dot" tabindex="0" role="slider" aria-label="Asha's position. Use arrow keys to move." aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="inside the zone">
-              <circle id="geo-halo" cx="180" cy="140" r="18" fill="#F0F1FA" opacity=".14"/>
-              <circle id="geo-car" cx="180" cy="140" r="8" fill="#F0F1FA" stroke="#0a0a0c" stroke-width="2"/>
-              <text id="geo-name" x="180" y="120" text-anchor="middle" class="map-name">Asha</text>
-            </g>
-          </svg>
-          <ol class="pipeline mono" id="geo-pipe">
-            <li data-step="os"><span>S1</span>Android Geofencing API: EXIT</li>
-            <li data-step="worker"><span>S2</span>BroadcastReceiver → WorkManager (retries offline)</li>
-            <li data-step="fs"><span>S3</span>Firestore: events/asha_EXIT_&lt;time&gt; (deterministic id)</li>
-            <li data-step="fn"><span>S4</span>Cloud Function: fan out to other members</li>
-            <li data-step="fcm"><span>S5</span>FCM push → Ravi's phone</li>
-          </ol>
-          <p class="geo-help" id="geo-help">Keyboard: focus the marker and use the arrow keys.</p>
-        </div>
-        <div class="phone" aria-label="Ravi's phone"><div class="screen" id="geo-screen" aria-live="polite"><div class="clock" id="geo-clock">10:42</div></div></div>
-      </div>
-      <div class="lab-foot"><small>From <a href="https://github.com/Darshan-05032003/GeoGuard" target="_blank" rel="noopener noreferrer">GeoGuard</a>: OS geofencing, WorkManager, Firestore, Cloud Functions, FCM.</small></div>
-    </article>
   </div>
 </section>
 
