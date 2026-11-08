@@ -1,6 +1,6 @@
 # Portfolio
 
-**Live:** https://darshan.is-a.dev (Cloudflare Pages) · mirror: https://darshan-05032003.github.io/Portfolio/
+**Live:** https://darshan-portfolio-6vo.pages.dev (Cloudflare Pages; darshan-sonawane.is-a.dev once registered) · mirror: https://darshan-05032003.github.io/Portfolio/
 
 A scroll-cinema portfolio: a procedural Formula car (4.3k triangles, built from primitives in `src/car.js`) sits in a fixed Three.js stage while the page scrolls over it. One 0–1 scroll value drives a camera shot list (reveal → silhouette → cockpit → rear/DRS → detail → exit), the wheels, and the text reveals. Three race-control labs let a visitor break an oversell race, a retried payment and an append-only ledger. The car drives through a night street circuit that streams past (kerbs, barriers, lamp posts, grandstands), with tyre smoke, plank sparks, suspension squat and camera shake driven by scroll speed; drop a Creative-Commons .glb at model/car.glb and it replaces the code-built car (see DEPLOY.md).
 
