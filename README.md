@@ -1,23 +1,27 @@
-# Portfolio — race weekend edition
+# Portfolio
 
 **Live:** https://darshan-05032003.github.io/Portfolio/
 
-One self-contained HTML page, no framework, no tracking. Start lights on arrival, a scroll-driven cockpit (speed, gear, shift lights) and track map, a timing tower of my repositories, and four race-control labs you can break live: an oversell race, a payment retried twice, an append-only ledger, and a geofence.
+A scroll-cinema portfolio: a procedural Formula car (4.3k triangles, built from primitives in `src/car.js`) sits in a fixed Three.js stage while the page scrolls over it. One 0–1 scroll value drives a camera shot list (reveal → silhouette → cockpit → rear/DRS → detail → exit), the wheels, and the text reveals. Four race-control labs let a visitor break an oversell race, a retried payment, an append-only ledger and a geofence.
+
+Design decisions come from a 120-site study (54 award-winning portfolios, 35 motorsport/automotive sites, 31 3D scroll sites): one typeface with a width axis (Archivo expanded ↔ condensed, the F1 Torque/Turbo pairing), weights 400–500 only, graphite ladder plus one accent, hairlines instead of glows, one easing and one duration scale, transform/opacity only.
 
 | Path | What it is |
 |---|---|
-| `src/motion.js` | Pure animation math: frame-rate-independent smoothing, easing, scroll-to-speed telemetry, start-light schedule, race-lab layout |
-| `src/sim.js` | Pure simulation engines behind the labs |
-| `src/app.js` | DOM wiring: one `requestAnimationFrame` loop, transform/opacity-only animation, Web Animations API |
-| `test/*.test.js` | 36 unit tests, written before the code, including 10,000-run stress tests |
-| `test/e2e.js` | Headless Chrome: plays every lab, asserts outcomes, checks CSP violations, measures frame times while scrolling, checks mobile overflow |
-| `build.js` | Inlines everything into one file and pins the inline scripts with a SHA-256 Content-Security-Policy |
-| `docs/index.html` | The built page, served by GitHub Pages (Settings → Pages → `main`, `/docs`) |
+| `src/car.js` | Procedural car: lofted monocoque, sidepods, wings with DRS flap, wheels; contact shadow |
+| `src/scene.js` | Renderer, lights, procedural studio cubemap for reflections, adaptive pixel ratio, device tiers |
+| `src/cinema.js` | Scroll → camera keyframe path with holds and per-shot screen offsets (pure math) |
+| `src/motion.js` | Frame-rate-independent smoothing, easing, lab layout (pure math) |
+| `src/sim.js` | Lab simulation engines (pure logic) |
+| `src/app.js`, `src/labs.js` | DOM wiring: one rAF loop, render on demand, labs |
+| `test/*.test.js` | 45 unit tests, written before the code, incl. 100k-sample and 10k-run stress tests |
+| `test/e2e.js` | Headless Chrome: plays every lab, checks CSP, no-WebGL poster fallback, mobile overflow, frame times |
+| `docs/` | Built site served by GitHub Pages (Settings → Pages → `main`, `/docs`) |
 
 ```bash
 npm test        # unit tests
-npm run build   # src/ → dist/index.html → docs/index.html
+npm run build   # src/ + vendor/ → dist/ → docs/
 npm run e2e     # needs Playwright + Chrome
 ```
 
-Motion rules: only `transform` and `opacity` animate; scroll-linked values are smoothed with `1 - e^(-λ·dt)` so they feel identical at 60, 120 or 144 Hz; the loop pauses in background tabs; `prefers-reduced-motion` turns animation off.
+Three.js (r170) is vendored in `vendor/` so the page has no CDN dependency. Content-Security-Policy: `script-src 'self'`, no inline scripts, no connections.

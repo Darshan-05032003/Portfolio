@@ -4,35 +4,26 @@ const { chromium } = require('playwright');
 const path = require('path');
 const assert = require('assert/strict');
 
-const PAGE = 'file://' + path.join(__dirname, '..', 'dist', 'index.html');
+let PAGE = '';
 const results = [];
+const ok = (name) => results.push('ok   ' + name);
 const fs = require('fs');
 
-// Serve the real Google Fonts from local @fontsource packages (the sandbox has no route to Google),
-// so screenshots show true type metrics. Skipped when the packages are absent.
-const FONT_DIR = '/tmp/fontpkgs/node_modules/@fontsource';
-const FONTS = [
-  ['Barlow Condensed', 'barlow-condensed', [600, 700, 800], ['normal', 'italic']],
-  ['Barlow', 'barlow', [400, 500, 600], ['normal']],
-  ['JetBrains Mono', 'jetbrains-mono', [400, 600, 700], ['normal']]
-];
+const http = require('http');
+const root = path.join(__dirname, '..', 'dist');
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css' };
+const srv = http.createServer((q, res) => { const p = path.join(root, decodeURIComponent(q.url.split('?')[0]).replace(/^\/+/, '') || 'index.html'); fs.readFile(p, (e, d) => { if (e) { res.writeHead(404); res.end(); return; } res.writeHead(200, { 'Content-Type': types[path.extname(p)] || 'application/octet-stream' }); res.end(d); }); });
+const FONT_DIR = '/tmp/fontpkgs/node_modules';
 async function serveFonts(ctx) {
   if (!fs.existsSync(FONT_DIR)) return;
-  let css = '';
-  for (const [fam, pkg, weights, styles] of FONTS) for (const w of weights) for (const st of styles) {
-    css += `@font-face{font-family:'${fam}';font-style:${st};font-weight:${w};font-display:swap;src:url(https://fonts.gstatic.com/local/${pkg}/${pkg}-latin-${w}-${st}.woff2) format('woff2');}\n`;
-  }
+  const css = `@font-face{font-family:'Archivo';font-weight:100 900;font-stretch:62% 125%;src:url(https://fonts.gstatic.com/l/archivo.woff2) format('woff2-variations');}@font-face{font-family:'JetBrains Mono';font-weight:100 800;src:url(https://fonts.gstatic.com/l/jb.woff2) format('woff2-variations');}`;
   await ctx.route('https://fonts.googleapis.com/**', (r) => r.fulfill({ status: 200, contentType: 'text/css', headers: { 'Access-Control-Allow-Origin': '*' }, body: css }));
-  await ctx.route('https://fonts.gstatic.com/local/**', (r) => {
-    const parts = new URL(r.request().url()).pathname.split('/');
-    const file = path.join(FONT_DIR, parts[2], 'files', parts[3]);
-    r.fulfill({ status: 200, contentType: 'font/woff2', headers: { 'Access-Control-Allow-Origin': '*' }, body: fs.readFileSync(file) });
-  });
+  await ctx.route('https://fonts.gstatic.com/l/**', (r) => { const f = r.request().url().endsWith('archivo.woff2') ? '@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2' : '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2'; r.fulfill({ status: 200, contentType: 'font/woff2', headers: { 'Access-Control-Allow-Origin': '*' }, body: fs.readFileSync(path.join(FONT_DIR, f)) }); });
 }
-const ok = (name) => results.push('ok   ' + name);
-
+const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] };
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  await new Promise((r) => srv.listen(0, r)); PAGE = `http://127.0.0.1:${srv.address().port}/index.html`;
+  const browser = await chromium.launch(LAUNCH);
   const errors = [];
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   await serveFonts(ctx);
@@ -45,23 +36,24 @@ const ok = (name) => results.push('ok   ' + name);
   });
   await page.goto(PAGE);
 
-  // --- intro lights ---
-  await page.waitForSelector('#lights:not([hidden])', { timeout: 3000 });
-  await page.waitForFunction(() => document.getElementById('lights').hidden === true, null, { timeout: 8000 });
-  assert.equal(await page.evaluate(() => document.body.classList.contains('locked')), false);
-  assert.ok(await page.evaluate(() => document.querySelector('.title').classList.contains('in')));
-  ok('start lights run, release the page and reveal the hero');
+  // --- loader + 3D stage ---
+  await page.waitForFunction(() => document.getElementById('loader').classList.contains('done'), null, { timeout: 15000 });
+  assert.equal(await page.evaluate(() => document.body.dataset.tier !== 'none' && document.getElementById('stage').classList.contains('on')), true);
+  assert.ok(await page.evaluate(() => document.querySelector('.name').classList.contains('in')));
+  ok('loader finishes, WebGL stage is on, hero reveals');
 
   // --- timing tower ---
-  await page.locator('#grid').scrollIntoViewIfNeeded();
+  await page.locator('#work').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
   assert.equal(await page.locator('#tower .row').count(), 9);
   await page.locator('#tower .row-btn').first().click();
   assert.equal(await page.locator('#tower .row-btn').first().getAttribute('aria-expanded'), 'true');
+  assert.match(await page.locator('#tower .row').first().locator('.detail-in a').getAttribute('href'), /github\.com\/Darshan-05032003\/ecommerce-backend$/);
   ok('timing tower renders 9 repos and rows expand');
 
   // --- lab 1 ---
   const runRace = async (mode) => {
-    await page.locator(`#race-mode input[value="${mode}"]`).check({ force: true });
+    await page.locator(`#lab-race input[value="${mode}"]`).check({ force: true });
     await page.locator('#race-run').click();
     await page.waitForFunction(() => !document.getElementById('race-run').disabled && document.getElementById('race-verdict').textContent.length > 0, null, { timeout: 15000 });
     return page.evaluate(() => ({ orders: +document.getElementById('race-orders').textContent, stock: +document.getElementById('race-stock').textContent, v: document.getElementById('race-verdict').className }));
@@ -70,10 +62,10 @@ const ok = (name) => results.push('ok   ' + name);
   const naive = await runRace('naive');
   assert.ok(naive.orders > 5, 'naive mode should oversell, got ' + naive.orders);
   assert.match(naive.v, /bad/);
-  await page.screenshot({ path: '/tmp/f1shots/lab-race-naive.png', clip: await page.locator('#lab-race').boundingBox() });
+  await page.screenshot({ path: '/tmp/f1v2e/lab-race-naive.png', clip: await page.locator('#lab-race').boundingBox() });
   const safe = await runRace('safe');
   assert.equal(safe.orders, 5); assert.equal(safe.stock, 0); assert.match(safe.v, /good/);
-  await page.screenshot({ path: '/tmp/f1shots/lab-race-safe.png', clip: await page.locator('#lab-race').boundingBox() });
+  await page.screenshot({ path: '/tmp/f1v2e/lab-race-safe.png', clip: await page.locator('#lab-race').boundingBox() });
   ok(`race lab: naive oversold (${naive.orders} orders), conditional UPDATE sold exactly 5`);
 
   // rapid-fire: hammer the button during a run; only one run may happen
@@ -93,7 +85,7 @@ const ok = (name) => results.push('ok   ' + name);
   await page.locator('#lab-pay').scrollIntoViewIfNeeded();
   assert.equal(await pay(false), '3 charges');
   assert.equal(await pay(true), '1 charge');
-  await page.screenshot({ path: '/tmp/f1shots/lab-pay.png', clip: await page.locator('#lab-pay').boundingBox() });
+  await page.screenshot({ path: '/tmp/f1v2e/lab-pay.png', clip: await page.locator('#lab-pay').boundingBox() });
   ok('payment lab: 3 charges without a key, 1 with');
 
   // --- lab 3 ---
@@ -120,15 +112,8 @@ const ok = (name) => results.push('ok   ' + name);
   for (let i = 0; i < 14; i++) await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(600);
   assert.equal(await page.locator('#geo-screen .notif').count(), 1, 'second exit inside the cooldown must not push');
-  await page.screenshot({ path: '/tmp/f1shots/lab-geo.png', clip: await page.locator('#lab-geo').boundingBox() });
+  await page.screenshot({ path: '/tmp/f1v2e/lab-geo.png', clip: await page.locator('#lab-geo').boundingBox() });
   ok('geofence lab: exit pushes once, cooldown swallows the repeat');
-
-  // --- reaction test ---
-  await page.locator('#react').scrollIntoViewIfNeeded();
-  await page.locator('#react-start').click();
-  await page.locator('#react-pad').click();
-  assert.equal(await page.locator('#react-out').textContent(), 'Jump start');
-  ok('reaction test detects a jump start');
 
   // --- CSP + errors ---
   const csp = await page.evaluate(() => window.__csp);
@@ -153,37 +138,46 @@ const ok = (name) => results.push('ok   ' + name);
     return { frames: f.length, p50: pct(0.5), p95: pct(0.95), over33: f.filter((x) => x > 33.4).length, longTasks: window.__long.length, longest: Math.max(0, ...window.__long) };
   });
   results.push(`perf frames=${perf.frames} p50=${perf.p50.toFixed(1)}ms p95=${perf.p95.toFixed(1)}ms frames>33ms=${perf.over33} longtasks=${perf.longTasks} longest=${perf.longest.toFixed(0)}ms`);
-  const mapShown = await page.evaluate(() => document.getElementById('trackmap').classList.contains('show'));
-  assert.ok(mapShown, 'track map should be visible after scrolling');
-  ok('scroll telemetry loop ran across the whole page');
+  ok('scroll cinema loop ran across the whole page');
 
   // --- full-page and section screenshots, desktop ---
   await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(500);
-  await page.screenshot({ path: '/tmp/f1shots/desktop-hero.png' });
-  for (const id of ['grid', 'pace', 'pitwall']) {
+  await page.screenshot({ path: '/tmp/f1v2e/desktop-hero.png' });
+  for (const id of ['work', 'about', 'contact']) {
     await page.locator('#' + id).scrollIntoViewIfNeeded(); await page.waitForTimeout(1600);
-    await page.screenshot({ path: `/tmp/f1shots/desktop-${id}.png` });
+    await page.screenshot({ path: `/tmp/f1v2e/desktop-${id}.png` });
   }
 
   // --- mobile ---
   const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
-  await serveFonts(m);
   const mp = await m.newPage();
   mp.on('pageerror', (e) => errors.push('mobile pageerror: ' + e.message));
   await mp.goto(PAGE);
-  await mp.locator('#lights-skip').click();
+  await serveFonts(m);
   await mp.waitForTimeout(1500);
-  await mp.screenshot({ path: '/tmp/f1shots/mobile-hero.png' });
+  await mp.screenshot({ path: '/tmp/f1v2e/mobile-hero.png' });
   const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   assert.ok(overflow <= 0, 'horizontal overflow on mobile: ' + overflow + 'px');
-  for (const id of ['grid', 'lab-race', 'lab-ledger', 'pitwall']) {
+  for (const id of ['work', 'lab-race', 'lab-ledger', 'contact']) {
     await mp.locator('#' + id).scrollIntoViewIfNeeded(); await mp.waitForTimeout(1500);
-    await mp.screenshot({ path: `/tmp/f1shots/mobile-${id}.png` });
+    await mp.screenshot({ path: `/tmp/f1v2e/mobile-${id}.png` });
   }
   ok('mobile: no horizontal overflow');
 
+  // --- no-WebGL fallback: poster shows, labs still work ---
+  const nw = await browser.newContext({ viewport: { width: 1200, height: 800 } });
+  const np = await nw.newPage(); np.on('pageerror', (e) => errors.push('nowebgl: ' + e.message));
+  await np.addInitScript(() => { const g = HTMLCanvasElement.prototype.getContext; HTMLCanvasElement.prototype.getContext = function (t, ...r) { return /webgl/.test(t) ? null : g.call(this, t, ...r); }; });
+  await np.goto(PAGE); await np.waitForTimeout(800);
+  assert.equal(await np.evaluate(() => document.body.dataset.tier), 'none');
+  assert.equal(await np.evaluate(() => getComputedStyle(document.getElementById('poster')).display), 'block');
+  assert.equal(await np.evaluate(() => document.getElementById('loader').classList.contains('done')), true);
+  await np.locator('#pay-run').click(); await np.waitForFunction(() => !document.getElementById('pay-run').disabled && document.getElementById('pay-verdict').textContent.length > 0, null, { timeout: 15000 });
+  ok('no-WebGL fallback: poster shown, page unlocked, labs still run');
+  await nw.close();
+
   assert.deepEqual(errors, [], errors.join('\n'));
   ok('no page errors');
-  await browser.close();
+  await browser.close(); srv.close();
   console.log(results.join('\n'));
 })().catch((e) => { console.log(results.join('\n')); console.error('FAIL', e.message); process.exit(1); });

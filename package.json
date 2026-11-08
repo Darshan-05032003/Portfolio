@@ -1,12 +1,12 @@
 {
   "name": "darshan-portfolio",
   "private": true,
-  "version": "3.0.0",
-  "description": "Darshan Sonawane's portfolio, race-weekend edition: one HTML file with live, unit-tested system labs.",
+  "version": "4.0.0",
+  "description": "Darshan Sonawane's portfolio: a 3D scroll-cinema page with live, unit-tested system labs.",
   "scripts": {
-    "test": "node --test test/sim.test.js test/motion.test.js",
+    "test": "node --test test/sim.test.js test/motion.test.js test/cinema.test.js",
     "e2e": "node test/e2e.js",
-    "build": "node build.js && cp dist/index.html docs/index.html"
+    "build": "node build.js && rm -rf docs && cp -r dist docs && rm -f docs/artifact.html"
   },
   "license": "MIT"
 }

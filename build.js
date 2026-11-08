@@ -1,26 +1,16 @@
-// Inline CSS and JS into one self-contained page and pin the inline scripts with a CSP.
-//   dist/index.html    -> GitHub Pages (strict Content-Security-Policy with script hashes)
-//   dist/artifact.html -> same page without the CSP meta, for hosts that inject their own runtime
-const fs = require('fs'), path = require('path'), crypto = require('crypto');
-const src = (f) => fs.readFileSync(path.join(__dirname, 'src', f), 'utf8');
-let html = src('index.html');
-html = html.replace('<link rel="stylesheet" href="style.css">', () => '<style>\n' + src('style.css') + '\n</style>');
-const scripts = ['motion.js', 'sim.js', 'app.js'].map(src);
-html = html.replace('<script src="motion.js"></script>\n<script src="sim.js"></script>\n<script src="app.js"></script>',
-  () => scripts.map((s) => '<script>' + s + '</script>').join('\n'));
-if (/href="style\.css"|src="(motion|sim|app)\.js"/.test(html)) throw new Error('inlining failed');
-const hashes = scripts.map((s) => "'sha256-" + crypto.createHash('sha256').update(s, 'utf8').digest('base64') + "'");
-const csp = [
-  "default-src 'none'",
-  'script-src ' + hashes.join(' '),
-  "style-src 'unsafe-inline' https://fonts.googleapis.com",
-  'font-src https://fonts.gstatic.com',
-  'img-src data:',
-  "connect-src 'none'",
-  "base-uri 'none'",
-  "form-action 'none'"
-].join('; ');
-fs.mkdirSync(path.join(__dirname, 'dist'), { recursive: true });
-fs.writeFileSync(path.join(__dirname, 'dist', 'index.html'), html.replace('<!--CSP-->', '<meta http-equiv="Content-Security-Policy" content="' + csp + '">'));
-fs.writeFileSync(path.join(__dirname, 'dist', 'artifact.html'), html.replace('<!--CSP-->\n', ''));
-console.log('dist/index.html', (html.length / 1024).toFixed(1), 'KB,', hashes.length, 'script hashes pinned');
+// Assemble dist/: the page, its modules, the vendored Three.js, and a strict CSP.
+//   dist/index.html carries the CSP meta (GitHub Pages); dist/artifact.html is the same page without it.
+const fs = require('fs'), path = require('path');
+const src = path.join(__dirname, 'src'), dist = path.join(__dirname, 'dist');
+fs.rmSync(dist, { recursive: true, force: true });
+fs.mkdirSync(path.join(dist, 'vendor'), { recursive: true });
+for (const f of ['style.css', 'app.js', 'labs.js', 'scene.js', 'car.js', 'cinema.js', 'motion.js', 'sim.js']) fs.copyFileSync(path.join(src, f), path.join(dist, f));
+fs.copyFileSync(path.join(__dirname, 'vendor', 'three.module.min.js'), path.join(dist, 'vendor', 'three.module.min.js'));
+// modules import '../vendor/...' relative to src/; in dist they sit beside vendor/
+for (const f of ['scene.js', 'car.js']) { const p = path.join(dist, f); fs.writeFileSync(p, fs.readFileSync(p, 'utf8').replace("'../vendor/three.module.min.js'", "'./vendor/three.module.min.js'")); }
+const csp = ["default-src 'none'", "script-src 'self'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", 'font-src https://fonts.gstatic.com', 'img-src data: blob:', "connect-src 'none'", "base-uri 'none'", "form-action 'none'", "object-src 'none'"].join('; ');
+const html = fs.readFileSync(path.join(src, 'index.html'), 'utf8');
+fs.writeFileSync(path.join(dist, 'index.html'), html.replace('<meta name="viewport"', '<meta http-equiv="Content-Security-Policy" content="' + csp + '">\n<meta name="viewport"'));
+fs.writeFileSync(path.join(dist, 'artifact.html'), html);
+let total = 0; for (const f of fs.readdirSync(dist)) { const p = path.join(dist, f); if (fs.statSync(p).isFile()) total += fs.statSync(p).size; }
+console.log('dist/ written,', (total / 1024).toFixed(0), 'KB + three.js', (fs.statSync(path.join(dist, 'vendor', 'three.module.min.js')).size / 1024).toFixed(0), 'KB');

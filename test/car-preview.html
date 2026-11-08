@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:#0a0b0e;height:100%}canvas{display:block}</style>
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script></head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { buildCar, contactShadow } from '/src/car.js';
+const view = new URLSearchParams(location.search).get('view') || 'front34';
+const r = new THREE.WebGLRenderer({ antialias: true });
+r.setSize(innerWidth, innerHeight); r.setPixelRatio(1); r.outputColorSpace = THREE.SRGBColorSpace;
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(r.domElement);
+const s = new THREE.Scene(); s.background = new THREE.Color(0x0a0b0e); s.fog = new THREE.Fog(0x0a0b0e, 14, 30);
+const cam = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 0.1, 100);
+const views = { front34: [7.5, 2.2, 6.5], side: [0.3, 1.2, 9.5], rear34: [-7, 2.4, 6], top: [0.5, 9, 0.01], low: [8, 0.5, 3.5], front: [10, 1.1, 0.01] };
+cam.position.set(...views[view]); cam.lookAt(0, 0.45, 0);
+s.add(new THREE.HemisphereLight(0x8fa3c7, 0x0a0a0c, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(4, 7, 5); key.castShadow = true; key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -5; key.shadow.camera.right = 5; key.shadow.camera.top = 5; key.shadow.camera.bottom = -5; s.add(key);
+const rim = new THREE.DirectionalLight(0xff3b2e, 1.4); rim.position.set(-6, 3, -4); s.add(rim);
+const fill = new THREE.DirectionalLight(0x6f8cff, 0.6); fill.position.set(-3, 2, 6); s.add(fill);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x111218, roughness: 0.9, metalness: 0 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; s.add(ground);
+const car = buildCar({ number: 5 }); s.add(car); s.add(contactShadow());
+let tris = 0; car.traverse((o) => { if (o.isMesh) tris += o.geometry.index ? o.geometry.index.count / 3 : o.geometry.attributes.position.count / 3; });
+window.__tris = Math.round(tris);
+r.render(s, cam); window.__done = true;
+</script></body></html>

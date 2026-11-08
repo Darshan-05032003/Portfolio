@@ -1,0 +1,9 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#08090c;height:100%}canvas{display:block;width:100vw;height:100vh}</style>
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script></head><body><canvas id="c"></canvas>
+<script type="module">
+import { createScene } from '/src/scene.js';
+const q = new URLSearchParams(location.search);
+const s = createScene(document.getElementById('c'), { tier: 'high', livery: parseInt(q.get('livery') || '121318', 16), accentPaint: parseInt(q.get('accent') || 'ff5a1f', 16) });
+const v = { front34: [6.2, 1.7, 5.0], side: [0.3, 1.0, 7.6], rear34: [-7, 2.2, 5.5], low: [7.5, 0.6, 3.2] }[q.get('view') || 'front34'];
+s.camera.position.set(...v); s.camera.lookAt(0, 0.45, 0); s.render(); window.__done = true;
+</script></body></html>
