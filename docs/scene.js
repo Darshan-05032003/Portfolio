@@ -29,7 +29,7 @@ export function createScene(canvas, opts = {}) {
   scene.add(new THREE.HemisphereLight(0x9aa0ac, 0x040406, 0.16));
   // floodlights: warm key from the lamp side, cool rim from the stands
   const key = new THREE.DirectionalLight(0xfff0d6, 3.0); key.position.set(3, 9, 6);
-  if (tier === 'high') { key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.camera.left = -5; key.shadow.camera.right = 5; key.shadow.camera.top = 5; key.shadow.camera.bottom = -5; key.shadow.bias = -0.0005; }
+  if (tier === 'high') { key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.camera.left = -4; key.shadow.camera.right = 4; key.shadow.camera.top = 4; key.shadow.camera.bottom = -4; key.shadow.bias = -0.0003; key.shadow.normalBias = 0.02; key.shadow.radius = 3; }
   scene.add(key);
   const rimCool = new THREE.DirectionalLight(0xb4c4ff, 1.7); rimCool.position.set(-5, 4, -7); scene.add(rimCool);
   const rimWarm = new THREE.DirectionalLight(opts.accent || 0xff5a1f, 1.6); rimWarm.position.set(-3, 2, 6); scene.add(rimWarm);
@@ -79,8 +79,16 @@ export function createScene(canvas, opts = {}) {
   let drsOpen = 0, t = 0;
   const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), rearW = [new THREE.Vector3(), new THREE.Vector3()], exW = new THREE.Vector3();
   const nz = (k) => Math.sin(t * 87.0 + k) * 0.6 + Math.sin(t * 131.7 + k * 2.1) * 0.4;   // engine-frequency jitter
+  // reflections move like real footage: the environment turns with the road heading and the floodlight
+  // banks slide along the bodywork as the car travels; each lamp it passes lifts the key light briefly
+  let travel = 0;
+  const keyBase = key.intensity;
   function update(dt, d) {
     t += dt;
+    travel += d.speed * dt;
+    if (scene.environmentRotation) scene.environmentRotation.y = (opts.road ? -opts.road.sample(opts.road.s).h : 0) + (travel % 64) / 64 * 0.9;
+    const lampPhase = (travel % 30) / 30;                   // lamps every 30 m
+    key.intensity = keyBase * (0.82 + 0.35 * Math.exp(-Math.pow((lampPhase - 0.5) * 6, 2)));
     track.update();
     for (const w of vehicle.wheels) {
       const a = -d.wheelAngle;

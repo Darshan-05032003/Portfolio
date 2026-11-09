@@ -71,9 +71,23 @@ function liveryMaps(kind, W = 1024, H = 256) {
   const map = tex(cv), orm2 = tex(om, { srgb: false }); map.flipY = false; orm2.flipY = false; // canvas row = v
   return { map, orm: orm2 };
 }
+let _peel;
+function peel() { // clearcoat orange-peel + metallic flake: tiny normal-map noise, tiled
+  if (_peel) return _peel;
+  const n = 256, cv = canvas(n, n), c = cv.getContext('2d'), img = c.createImageData(n, n);
+  for (let i = 0; i < n * n; i++) {
+    const x = i % n, y = (i / n) | 0;
+    const wv = Math.sin(x * 0.19) * Math.sin(y * 0.23) * 6 + Math.sin(x * 0.07 + y * 0.05) * 5;   // orange peel
+    const fl = Math.random() < 0.06 ? (Math.random() - 0.5) * 70 : 0;                              // flakes
+    img.data[i * 4] = 128 + wv + fl; img.data[i * 4 + 1] = 128 + wv * 0.8 - fl * 0.7; img.data[i * 4 + 2] = 255; img.data[i * 4 + 3] = 255;
+  }
+  c.putImageData(img, 0, 0);
+  _peel = tex(cv, { srgb: false, repeat: [24, 6] });
+  return _peel;
+}
 function paintMat(kind) {
   const m = liveryMaps(kind);
-  return new THREE.MeshPhysicalMaterial({ map: m.map, roughnessMap: m.orm, metalnessMap: m.orm, roughness: 1, metalness: 1, clearcoat: 1, clearcoatRoughness: 0.035, envMapIntensity: 1.5 });
+  return new THREE.MeshPhysicalMaterial({ map: m.map, roughnessMap: m.orm, metalnessMap: m.orm, roughness: 1, metalness: 1, normalMap: peel(), normalScale: new THREE.Vector2(0.18, 0.18), clearcoat: 1, clearcoatRoughness: 0.035, clearcoatNormalMap: peel(), clearcoatNormalScale: new THREE.Vector2(0.06, 0.06), envMapIntensity: 1.5 });
 }
 function decal(draw, w, h) {
   const cv = canvas(w, h); const paint = () => { const c = cv.getContext('2d'); c.clearRect(0, 0, w, h); draw(c, w, h); };
@@ -315,7 +329,10 @@ export function buildCar(opts = {}) {
     const cv = canvas(1024, 64), c = cv.getContext('2d');
     c.fillStyle = '#121214'; c.fillRect(0, 0, 1024, 64);
     c.fillStyle = '#19191c'; c.fillRect(0, 18, 1024, 28);                 // tread, slightly worn
-    for (const y of [9, 51]) { c.fillStyle = '#d7262c'; c.fillRect(0, y, 1024, 3); c.fillStyle = '#c9c9cf'; for (let k = 0; k < 8; k++) c.fillRect(k * 128 + 30, y - 5, 46, 2); }
+    // the car never stops, so a real camera sees the sidewall marks smeared into faint rings:
+    // paint them pre-blurred (a 1/50 s shutter at 200 km/h turns a wheel ~180°)
+    for (const y of [9, 51]) { c.fillStyle = '#c4232a'; c.fillRect(0, y, 1024, 3); c.fillStyle = 'rgba(201,201,207,.16)'; c.fillRect(0, y - 5, 1024, 2); }
+    c.fillStyle = 'rgba(255,255,255,.025)'; for (let k = 0; k < 200; k++) c.fillRect(Math.random() * 1024, 18 + Math.random() * 28, 1, 1);
     return tex(cv);
   })();
   const tyreM = new THREE.MeshStandardMaterial({ map: tyreTex, roughness: 0.88, metalness: 0 });
@@ -323,7 +340,10 @@ export function buildCar(opts = {}) {
     const cv = canvas(512, 512), c = cv.getContext('2d'), r = 256;
     const g2 = c.createRadialGradient(r, r, 10, r, r, r); g2.addColorStop(0, '#2a2c33'); g2.addColorStop(1, '#141519'); c.fillStyle = g2; c.fillRect(0, 0, 512, 512);
     c.strokeStyle = ACCENT; c.lineWidth = 14; c.beginPath(); c.arc(r, r, r - 18, 0, Math.PI * 2); c.stroke();
-    c.fillStyle = 'rgba(233,233,236,.18)'; for (let k = 0; k < 5; k++) { c.save(); c.translate(r, r); c.rotate(k * Math.PI * 2 / 5); c.fillRect(40, -6, 180, 12); c.restore(); }
+    // spokes smeared by the rotation into a soft ring (motion blur baked in)
+    const sp = c.createRadialGradient(r, r, 40, r, r, 220); sp.addColorStop(0, 'rgba(233,233,236,0)'); sp.addColorStop(0.5, 'rgba(233,233,236,.07)'); sp.addColorStop(1, 'rgba(233,233,236,0)');
+    c.fillStyle = sp; c.beginPath(); c.arc(r, r, 220, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.05)'; c.lineWidth = 1; for (let k = 0; k < 40; k++) { c.beginPath(); c.arc(r, r, 60 + k * 4, 0, Math.PI * 2); c.stroke(); }
     c.fillStyle = '#0b0b0d'; c.beginPath(); c.arc(r, r, 34, 0, Math.PI * 2); c.fill();
     return tex(cv);
   })();
