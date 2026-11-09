@@ -86,7 +86,11 @@ body[data-tier="none"] .stage { display: none; }
 
 /* ---------- sections ---------- */
 .shot { position: relative; z-index: 1; min-height: 100vh; min-height: 100svh; padding: 120px var(--pad) 80px; max-width: var(--maxw); margin: 0 auto; }
-.hero { display: grid; align-content: end; padding-bottom: 36px; }
+.hero { display: grid; align-content: end; padding-bottom: 36px; position: relative; }
+/* keeps the type readable over the moving track */
+.hero::before { content: ''; position: absolute; left: -30vw; top: -25vh; bottom: -10vh; width: 95vw; background: radial-gradient(closest-side at 45% 62%, rgba(6,6,10,.8), rgba(6,6,10,.55) 55%, rgba(6,6,10,0)); pointer-events: none; }
+.hero > * { position: relative; }
+@media (max-width: 999px) { .hero::before { left: -10vw; width: 120vw; top: 25%; background: linear-gradient(180deg, rgba(6,6,10,0), rgba(6,6,10,.8) 30%); } }
 .hero-grid { max-width: 100%; }
 .scroll-cue { margin: 34px 0 0; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 12px; }
 .cue-line { width: 48px; height: 1px; background: var(--ink-3); transform-origin: left; animation: cue 2.2s var(--ease) infinite; }

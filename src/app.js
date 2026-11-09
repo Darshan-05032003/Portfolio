@@ -4,10 +4,12 @@ import './motion.js';
 import './cinema.js';
 import './sim.js';
 import './drive.js';
+import './road.js';
 import { createScene, deviceTier } from './scene.js';
 import { initLabs } from './labs.js';
 
-const M = window.Motion, C = window.Cinema, D = window.Drive;
+const M = window.Motion, C = window.Cinema, D = window.Drive, RD = window.Road;
+const road = RD.create();
 const $ = (id) => document.getElementById(id);
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = window.matchMedia('(pointer: coarse)').matches;
@@ -109,7 +111,7 @@ if (tier === 'none') { loaderDone(); }
 else {
   const canvas = $('stage');
   let S;
-  try { S = createScene(canvas, { tier }); } catch (e) { document.body.dataset.tier = 'none'; loaderDone(); throw e; }
+  try { S = createScene(canvas, { tier, road }); } catch (e) { document.body.dataset.tier = 'none'; loaderDone(); throw e; }
   progress(0.75);
   const sections = ['top', 'statement', 'work', 'labs', 'about', 'contact'].map((id) => $(id));
   // shot list (brief: reveal → silhouette → cockpit → rear/DRS → detail → exit); car-relative positions
@@ -144,10 +146,23 @@ else {
   if (!coarse) addEventListener('pointermove', (e) => { tx = (e.clientX / innerWidth - 0.5); ty = (e.clientY / innerHeight - 0.5); }, { passive: true });
 
   let prog = M.scrollProgress(scrollY, document.documentElement.scrollHeight, innerHeight), lastY = scrollY, lastT = performance.now(), vel = 0, dirty = true;
-  const drive = D.create({ driving: scrollY > innerHeight * 0.5 });
-  window.__drive = drive; window.__S = S;
+  const drive = D.create();
+  window.__drive = drive; window.__S = S; window.__road = road;
   const hud = initHud();
   const cam = S.camera;
+  /* scroll → corners. A new scroll gesture asks the road for a corner just ahead (down = right-hander,
+     up = left-hander, faster scroll = tighter radius); keep scrolling and the corners chain into esses. */
+  let idleFor = 9, sinceTurn = 9, lastDir = 1, camH = road.sample(0).h;
+  function steerFromScroll(dt, v) {
+    const a = Math.abs(v);
+    idleFor = a < 90 ? idleFor + dt : 0; sinceTurn += dt;
+    if (reduce || a < 150) return;
+    const fresh = idleFor === 0 && sinceTurn > 0.6 && !road.busy();
+    const chain = sinceTurn > 1.4 && !road.busy();
+    if (!fresh && !chain) return;
+    const dir = fresh ? (v > 0 ? -1 : 1) : -lastDir;
+    if (road.requestTurn(dir, M.clamp(115 - a / 40, 50, 115))) { lastDir = dir; sinceTurn = 0; }
+  }
   function frame(now) {
     const tIn = performance.now();
     const dt = M.clamp((now - lastT) / 1000, 0, 0.1); lastT = now;
@@ -156,13 +171,23 @@ else {
     const target = M.scrollProgress(y, document.documentElement.scrollHeight, innerHeight);
     prog = reduce ? target : M.damp(prog, target, 5, dt);
     px = M.damp(px, tx, 4, dt); py = M.damp(py, ty, 4, dt);
-    // the world always moves (the car is driving); scrolling is the throttle
-    drive.step(dt, reduce ? 0 : vel, y < innerHeight * 0.15);
+    // the car is always running: scroll adds throttle and asks for corners; the road decides braking
+    steerFromScroll(dt, raw);
+    road.update(dt);
+    const here = road.sample(road.s);
+    drive.step(dt, reduce ? 0 : vel, { k: here.k, kAhead: road.curvatureAhead(0, drive.speed * 1.8) });
+    if (!reduce) road.advance(drive.speed * dt);
     const shake = reduce ? [0, 0] : S.update(dt, drive);
+    // chase camera: lags the car's heading, so in a corner you see the car rotate against the frame
+    const carH = road.sample(road.s).h;
+    camH = M.damp(camH, carH, 1.8, dt);
+    const dh = camH - carH, ch = Math.cos(dh), sh = Math.sin(dh);
+    const rot = (p) => [p[0] * ch + p[2] * sh, p[1], -p[0] * sh + p[2] * ch];
     hud(drive, now);
     const s = path.sample(prog);
-    cam.position.set(s.pos[0] + px * 0.6 + shake[0], s.pos[1] - py * 0.3 + shake[1], s.pos[2]);
-    cam.lookAt(s.look[0], s.look[1], s.look[2]);
+    const cp = rot(s.pos), cl = rot(s.look);
+    cam.position.set(cp[0] + px * 0.6 + shake[0], cp[1] - py * 0.3 + shake[1], cp[2]);
+    cam.lookAt(cl[0], cl[1], cl[2]);
     if (Math.abs(cam.fov - s.fov) > 0.01) cam.fov = s.fov;
     const W = canvas.clientWidth || innerWidth, Hh = canvas.clientHeight || innerHeight;
     cam.setViewOffset(W, Hh, -s.shift[0] * W, s.shift[1] * Hh, W, Hh); cam.updateProjectionMatrix();
@@ -178,7 +203,7 @@ else {
   function initHud() {
     const root = $('hud'); if (!root) return () => {};
     const spd = $('hud-spd'), gear = $('hud-gear'), phase = $('hud-phase'), lights = [...root.querySelectorAll('.shift i')];
-    const LABEL = { grid: 'Grid · engine on', turn: 'Out of the box', launch: 'Launch', drive: 'Push', brake: 'Box, box' };
+    const LABEL = { push: 'Push', brake: 'Braking', corner: 'Turn in', apex: 'Apex', exit: 'Full throttle' };
     let last = 0, ls = '', lg = '', lp = '', ll = -1;
     root.hidden = false;
     return (d, now) => {
@@ -197,7 +222,7 @@ else {
     canvas.classList.add('on');
     setTimeout(loaderDone, reduce ? 0 : 350);
     requestAnimationFrame(frame);
-    if (reduce) { drive.step(0.016, 0, true); S.update(0.016, drive); S.render({ time: 0, blur: 0, bars: 0 }); }
+    if (reduce) { drive.step(0.016, 0, { k: 0, kAhead: 0 }); S.update(0.016, drive); S.render({ time: 0, blur: 0, bars: 0 }); }
   });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !reduce) { lastT = performance.now(); lastY = scrollY; dirty = true; requestAnimationFrame(frame); } });
 }

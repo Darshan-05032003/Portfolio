@@ -11,9 +11,9 @@ const srv = http.createServer((q, res) => { const p = path.join(root, decodeURIC
   const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/favicon|fonts/.test(m.text())) errs.push(m.text()); });
   await p.goto(`http://127.0.0.1:${port}/index.html`); await p.waitForTimeout(4000);
   const state = () => p.evaluate(() => { const t = document.getElementById('hud-phase'); return (t && t.textContent) + ' | ' + (document.getElementById('hud-spd') || {}).textContent + ' km/h'; });
-  await p.screenshot({ path: out + '/0-grid.png' }); console.log('grid:', await state());
+  await p.screenshot({ path: out + '/0-cruise.png' }); console.log('cruise:', await state());
   await p.mouse.move(700, 450);
-  const shots = [[350, '1-turn'], [1300, '2-launch'], [3200, '3-drive']];
+  const shots = [[700, '1-turnin'], [1600, '2-apex'], [2600, '3-exit']];
   const t0 = Date.now(); let k = 0;
   while (k < shots.length) {
     await p.mouse.wheel(0, 60); await p.waitForTimeout(40);

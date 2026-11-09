@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path');
 const src = path.join(__dirname, 'src'), dist = path.join(__dirname, 'dist');
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(path.join(dist, 'vendor'), { recursive: true });
-for (const f of ["style.css", "app.js", "labs.js", "scene.js", "car.js", "cinema.js", "motion.js", "sim.js", "drive.js", "track.js", "fx.js", "vehicle.js", "env.js", "post.js"]) fs.copyFileSync(path.join(src, f), path.join(dist, f));
+for (const f of ["style.css", "app.js", "labs.js", "scene.js", "car.js", "cinema.js", "motion.js", "sim.js", "drive.js", "track.js", "fx.js", "vehicle.js", "env.js", "post.js", "road.js"]) fs.copyFileSync(path.join(src, f), path.join(dist, f));
 for (const f of ['three.module.min.js', 'GLTFLoader.js', 'DRACOLoader.js', 'BufferGeometryUtils.js', 'meshopt_decoder.module.js']) fs.copyFileSync(path.join(__dirname, 'vendor', f), path.join(dist, 'vendor', f));
 fs.mkdirSync(path.join(dist, 'vendor', 'draco'), { recursive: true });
 fs.mkdirSync(path.join(dist, 'vendor', 'post'), { recursive: true });

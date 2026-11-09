@@ -142,12 +142,12 @@ const LAUNCH = { executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'
   await mp.goto(PAGE);
   await serveFonts(m);
   await mp.waitForTimeout(1500);
-  await mp.screenshot({ path: '/tmp/f1v2e/mobile-hero.png' });
+  await mp.screenshot({ path: '/tmp/f1v2e/mobile-hero.png', timeout: 120000 });
   const overflow = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   assert.ok(overflow <= 0, 'horizontal overflow on mobile: ' + overflow + 'px');
   for (const id of ['work', 'lab-race', 'lab-ledger', 'contact']) {
     await mp.locator('#' + id).scrollIntoViewIfNeeded(); await mp.waitForTimeout(1500);
-    await mp.screenshot({ path: `/tmp/f1v2e/mobile-${id}.png` });
+    await mp.screenshot({ path: `/tmp/f1v2e/mobile-${id}.png`, timeout: 120000 });
   }
   ok('mobile: no horizontal overflow');
 

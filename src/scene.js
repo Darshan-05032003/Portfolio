@@ -21,8 +21,8 @@ export function createScene(canvas, opts = {}) {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x06060a, 0.03); scene.background = new THREE.Color(0x06060a);
-  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 80);
+  scene.fog = new THREE.FogExp2(0x06060a, 0.02); scene.background = new THREE.Color(0x06060a);
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 220);
   camera.position.set(8, 2, 6); camera.lookAt(0, 0.5, 0);
 
   // --- lighting: hemisphere + key + cool rim + warm rim (no HDR) ---
@@ -31,14 +31,14 @@ export function createScene(canvas, opts = {}) {
   const key = new THREE.DirectionalLight(0xfff0d6, 3.0); key.position.set(3, 9, 6);
   if (tier === 'high') { key.castShadow = true; key.shadow.mapSize.set(1024, 1024); key.shadow.camera.left = -5; key.shadow.camera.right = 5; key.shadow.camera.top = 5; key.shadow.camera.bottom = -5; key.shadow.bias = -0.0005; }
   scene.add(key);
-  const rimCool = new THREE.DirectionalLight(0x9db4ff, 2.6); rimCool.position.set(-5, 4, -7); scene.add(rimCool);
+  const rimCool = new THREE.DirectionalLight(0xb4c4ff, 1.7); rimCool.position.set(-5, 4, -7); scene.add(rimCool);
   const rimWarm = new THREE.DirectionalLight(opts.accent || 0xff5a1f, 1.6); rimWarm.position.set(-3, 2, 6); scene.add(rimWarm);
 
   // --- procedural environment (64 px cubemap of a dark studio gradient with a soft top light) ---
   scene.environment = circuitEnv(renderer);
 
   // --- track + contact shadow ---
-  const track = buildTrack(tier); scene.add(track.group);
+  const track = buildTrack(tier, opts.road); scene.add(track.group);
   scene.add(contactShadow());
   const fx = createFx(scene);
 
@@ -81,7 +81,7 @@ export function createScene(canvas, opts = {}) {
   const nz = (k) => Math.sin(t * 87.0 + k) * 0.6 + Math.sin(t * 131.7 + k * 2.1) * 0.4;   // engine-frequency jitter
   function update(dt, d) {
     t += dt;
-    track.advance(d.speed * dt);
+    track.update();
     for (const w of vehicle.wheels) {
       const a = -d.wheelAngle;
       if (w.axis === 'z') w.node.rotation.z = a; else if (w.axis === 'x') w.node.rotation.x = a; else w.node.rotation.y = a;
@@ -101,7 +101,7 @@ export function createScene(canvas, opts = {}) {
     exW.copy(vehicle.exhaust).applyMatrix4(vehicle.root.matrixWorld);
     // the flame only reads from behind the car: fade it by how much the camera looks at the exhaust from the rear
     tmpA.set(-1, 0, 0).transformDirection(vehicle.root.matrixWorld); tmpB.copy(camera.position).sub(exW).normalize();
-    fx.update(dt, d.speed, d.accel, d.slip, rearW, exW, Math.max(0, Math.min(1, (tmpA.dot(tmpB) - 0.2) * 2)));
+    fx.update(dt, d.speed, d.accel, d.slip, rearW, exW, Math.max(0, Math.min(1, (tmpA.dot(tmpB) - 0.2) * 2)), d.state === 'apex' ? 1 : 0);
     const s = fx.shake(dt, d.speed);
     return [s[0] + sh * 0.035 * nz(5.5), s[1] + sh * 0.03 * nz(6.9)];
   }
