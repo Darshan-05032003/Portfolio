@@ -143,6 +143,25 @@ export function buildTrack(tier, road) {
   const towerM = new THREE.MeshStandardMaterial({ color: 0x050507, emissive: 0xffffff, emissiveMap: winTex, emissiveIntensity: 0.9, roughness: 1 });
   const towerSp = 45;
   const towers = inst(new THREE.BoxGeometry(14, 1, 12).translate(0, 0.5, 0), towerM, N(towerSp, 2));
+  // light shafts under every lamp: additive cones, bright at the lamp, fading to the ground and at the
+  // silhouette edges, faded with distance (the haze that makes a night circuit look filmed)
+  const beamGeo = new THREE.ConeGeometry(4.2, 11.4, 28, 1, true).translate(0, 5.7, 0);
+  const beamM = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    uniforms: { uColor: { value: new THREE.Color(0xffe6c0) }, uK: { value: tier === 'low' ? 0 : 0.075 } },
+    vertexShader: `varying float vH; varying vec3 vN; varying vec3 vV; varying float vD;
+      void main(){ vec4 p = vec4(position, 1.0); mat3 nm = mat3(modelViewMatrix);
+        #ifdef USE_INSTANCING
+          p = instanceMatrix * p; nm = nm * mat3(instanceMatrix);
+        #endif
+        vec4 mv = modelViewMatrix * p; vN = normalize(nm * normal); vV = normalize(-mv.xyz); vD = length(mv.xyz); vH = position.y;
+        gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform vec3 uColor; uniform float uK; varying float vH; varying vec3 vN; varying vec3 vV; varying float vD;
+      void main(){ float t = clamp(vH / 11.4, 0.0, 1.0);
+        float a = uK * (0.25 + 0.75 * t * t) * pow(abs(dot(normalize(vN), normalize(vV))), 2.2) * exp(-vD / 85.0) * smoothstep(5.0, 16.0, vD);
+        gl_FragColor = vec4(uColor * a, 1.0); }`
+  });
+  const beams = inst(beamGeo, beamM, N(lampSp, 2)); beams.renderOrder = 2;
   // lamp glows: one Points draw call, additive
   const glowN = N(lampSp, 2), glowPos = new Float32Array(glowN * 3);
   const glowGeo = new THREE.BufferGeometry(); glowGeo.setAttribute('position', new THREE.BufferAttribute(glowPos, 3).setUsage(THREE.DynamicDrawUsage));
@@ -182,9 +201,10 @@ export function buildTrack(tier, road) {
       return { s: p.s, lx, lz, rx: Math.sin(-dh), rz: Math.cos(-dh) };
     });
     for (const r of R) r.update(frame);
-    placeAlong([poles, arms, heads], lampSp, [-1, 1], (i, lx, lz, rx, rz, dh, side, idx) => {
+    placeAlong([poles, arms, heads, beams], lampSp, [-1, 1], (i, lx, lz, rx, rz, dh, side, idx) => {
       const w = side * (HALF + 4.6), x = lx + rx * w, z = lz + rz * w, yaw = dh + (side > 0 ? 0 : Math.PI);
       put(poles, i, x, 0, z, yaw); put(arms, i, x, 0, z, yaw); put(heads, i, x, 0, z, yaw);
+      put(beams, i, lx + rx * side * (HALF + 1.6), 0.05, lz + rz * side * (HALF + 1.6), dh);
       glowPos[i * 3] = lx + rx * side * (HALF + 1.6); glowPos[i * 3 + 1] = 11.7; glowPos[i * 3 + 2] = lz + rz * side * (HALF + 1.6);
     });
     glowGeo.setDrawRange(0, poles.count); glowGeo.attributes.position.needsUpdate = true;

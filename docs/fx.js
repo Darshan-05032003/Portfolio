@@ -32,6 +32,20 @@ export function createFx(scene) {
   // exhaust flame: small additive sprite at the rear
   const flame = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color: 0xff7a2a, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
   flame.scale.set(0.5, 0.35, 1); scene.add(flame);
+  // floating haze motes around the car: slow, warm, catch the floodlights
+  const MOTES = 420, mp = new Float32Array(MOTES * 3), mv = new Float32Array(MOTES * 3);
+  for (let i = 0; i < MOTES; i++) { mp[i * 3] = -25 + Math.random() * 55; mp[i * 3 + 1] = Math.random() * 9; mp[i * 3 + 2] = -14 + Math.random() * 28; mv[i * 3] = -2 - Math.random() * 4; mv[i * 3 + 1] = (Math.random() - 0.5) * 0.4; mv[i * 3 + 2] = (Math.random() - 0.5) * 0.6; }
+  const mg = new THREE.BufferGeometry(); mg.setAttribute('position', new THREE.BufferAttribute(mp, 3).setUsage(THREE.DynamicDrawUsage));
+  const motes = new THREE.Points(mg, new THREE.PointsMaterial({ size: 0.07, map: glowTex(), color: 0xffd9a8, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true }));
+  motes.frustumCulled = false; scene.add(motes);
+  function stepMotes(dt, speed) {
+    const push = 1 + speed / 40;
+    for (let i = 0; i < MOTES; i++) {
+      mp[i * 3] += mv[i * 3] * push * dt; mp[i * 3 + 1] += mv[i * 3 + 1] * dt; mp[i * 3 + 2] += mv[i * 3 + 2] * dt;
+      if (mp[i * 3] < -25) mp[i * 3] += 55; if (mp[i * 3 + 1] < 0) mp[i * 3 + 1] += 9; if (mp[i * 3 + 1] > 9) mp[i * 3 + 1] -= 9;
+    }
+    mg.attributes.position.needsUpdate = true;
+  }
   let smokeAcc = 0, sparkAcc = 0;
 
   /* speed in m/s, accel in m/s², slip 0..1 (hard scroll), rearWheels: [{x,y,z}] world positions, exhaustPos */
@@ -43,6 +57,7 @@ export function createFx(scene) {
     const sparkRate = (speed > 76 ? (speed - 76) / 16 * 70 : 0) + kerb * 80;   // plank on the kerbs / bottoming at top speed
     sparkAcc += sparkRate * dt;
     while (sparkAcc >= 1) { sparkAcc -= 1; sparks.emit(-1.2 + Math.random() * 1.5, 0.03, (Math.random() - 0.5) * 1.2, -speed * 0.25 - Math.random() * 6, 1.5 + Math.random() * 3, (Math.random() - 0.5) * 3, 0.25 + Math.random() * 0.35); }
+    stepMotes(dt, speed);
     const a = smoke.step(dt, -speed * 0.35, 0), b = sparks.step(dt, 0, -14);
     // exhaust flicker on lift/accel
     flame.position.set(exhaust.x, exhaust.y, exhaust.z);

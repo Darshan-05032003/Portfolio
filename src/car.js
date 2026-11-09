@@ -36,7 +36,7 @@ function carbonMat(repeat = 20) {
 
 /* Livery: paints colour + ORM (G roughness, B metalness) for a loft whose UV is u = along the car
    (1 = nose), v = around the section (0 right-mid, .25 top, .5 left-mid, .75 bottom). */
-function liveryMaps(kind, W = 1024, H = 256) {
+function liveryMaps(kind, W = 1024, H = kind === 'pod' ? 512 : 256) {
   const cv = canvas(W, H), om = canvas(W, H);
   const c = cv.getContext('2d'), o = om.getContext('2d');
   const col = c.createImageData(W, H), orm = o.createImageData(W, H);
@@ -68,7 +68,25 @@ function liveryMaps(kind, W = 1024, H = 256) {
     }
   }
   c.putImageData(col, 0, 0); o.putImageData(orm, 0, 0);
+  // own-name livery: SONAWANE along both sidepods. Canvas x = u (toward the nose), canvas y = section
+  // angle. Right pod's outer face sits at angle 0 (rows near 0/H, reads with y flipped); left pod's at
+  // angle π (row H/2, reads mirrored in x).
+  const lettering = () => {
+    if (kind !== 'pod') return;
+    c.putImageData(col, 0, 0);
+    const word = 'SONAWANE', x0 = W * 0.36, x1 = W * 0.9, rowH = H * 0.075;
+    const drawWord = (cy, flipX, flipY) => {
+      c.save(); c.translate((x0 + x1) / 2, cy); c.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+      c.font = FONT(Math.round(rowH * 1.25)); c.textAlign = 'center'; c.textBaseline = 'middle';
+      const m = c.measureText(word).width; c.scale((x1 - x0) / m, 1);
+      c.fillStyle = PIN; c.fillText(word, 0, 0); c.restore();
+    };
+    drawWord(0, false, true); drawWord(H, false, true);   // right outer face straddles the texture seam: draw both halves
+    drawWord(H * 0.5, true, false);
+  };
+  lettering();
   const map = tex(cv), orm2 = tex(om, { srgb: false }); map.flipY = false; orm2.flipY = false; // canvas row = v
+  if (kind === 'pod' && document.fonts && document.fonts.ready) document.fonts.ready.then(() => { lettering(); map.needsUpdate = true; });
   return { map, orm: orm2 };
 }
 let _peel;
@@ -309,11 +327,11 @@ export function buildCar(opts = {}) {
   const drs = new THREE.Group(); drs.position.set(-0.27, 0.075, 0); rw.add(drs);
   const flapG = bend(aerofoil(rwHalf * 2 - 0.02, 0.19, 0.018, 0.02, 50), rwHalf, (t, v) => { const o = smoothstep(0.7, 1, t); v.y -= 0.08 * o * o; });
   const flap = mesh(flapG, accent); flap.rotation.z = -0.55; drs.add(flap);
-  const rwNum = decal((c, w, h) => { c.fillStyle = 'rgba(0,0,0,0)'; c.fillRect(0, 0, w, h); c.font = FONT(120); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = ACCENT; c.fillText('DS', w / 2, h * 0.55); }, 256, 128);
+  const rwNum = decal((c, w, h) => { c.fillStyle = 'rgba(0,0,0,0)'; c.fillRect(0, 0, w, h); c.font = FONT(78); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = ACCENT; c.fillText('SONAWANE', w / 2, h * 0.55); }, 512, 128);
   for (const s of [-1, 1]) {
     const ep = curvedPlate((sh) => { sh.moveTo(0.06, -0.62); sh.lineTo(0.06, 0.02); sh.quadraticCurveTo(0.04, 0.16, -0.12, 0.17); sh.lineTo(-0.36, 0.14); sh.quadraticCurveTo(-0.44, 0.1, -0.44, 0.0); sh.lineTo(-0.44, -0.4); sh.quadraticCurveTo(-0.38, -0.6, -0.2, -0.62); sh.lineTo(0.06, -0.62); }, 0.014, graphite);
     ep.position.set(0, 0, s * (rwHalf + 0.006)); rw.add(ep);
-    const lab = mesh(new THREE.PlaneGeometry(0.28, 0.14), rwNum); lab.position.set(-0.19, -0.22, s * (rwHalf + 0.015)); lab.rotation.y = s > 0 ? 0 : Math.PI; rw.add(lab);
+    const lab = mesh(new THREE.PlaneGeometry(0.4, 0.1), rwNum); lab.position.set(-0.19, -0.22, s * (rwHalf + 0.015)); lab.rotation.y = s > 0 ? 0 : Math.PI; rw.add(lab);
     const led = mesh(new THREE.BoxGeometry(0.012, 0.22, 0.016), ledRed); led.position.set(-0.445, -0.18, s * (rwHalf + 0.006)); rw.add(led);
   }
   g.add(tube([[-2.15, 0.6, 0], [-2.38, 0.66, 0], [-2.5, 0.8, 0], [-2.44, 0.95, 0]], 0.03, carbon, 24)); // swan-neck pylon
